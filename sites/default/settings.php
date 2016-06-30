@@ -1,4 +1,8 @@
 <?php
+//Show all errors
+error_reporting(E_ALL);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
 
 /**
  * @file
@@ -285,7 +289,7 @@ $config_directories = array();
  *   $settings['hash_salt'] = file_get_contents('/home/example/salt.txt');
  * @endcode
  */
-$settings['hash_salt'] = '';
+$settings['hash_salt'] = 'KrPtmOyUxjoXdnbe3sF4EEAMZSGAZ2coRSQ9qWIf4wwpei1d1sREqKccp8tuR4T-Kuab9fR0Gw';
 
 /**
  * Deployment identifier.
@@ -703,7 +707,9 @@ $settings['container_yamls'][] = __DIR__ . '/services.yml';
  * will allow the site to run off of all variants of example.com and
  * example.org, with all subdomains included.
  */
-
+$settings['trusted_host_patterns'] = array(
+ '^www\.drupal8\.learning$',
+);
 /**
  * Load local development override configuration, if available.
  *
@@ -717,3 +723,15 @@ $settings['container_yamls'][] = __DIR__ . '/services.yml';
 # if (file_exists(__DIR__ . '/settings.local.php')) {
 #   include __DIR__ . '/settings.local.php';
 # }
+$databases['default']['default'] = array (
+  'database' => 'drupal8',
+  'username' => 'root',
+  'password' => 'toor',
+  'prefix' => 'D8',
+  'host' => 'localhost',
+  'port' => '3306',
+  'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+  'driver' => 'mysql',
+);
+$settings['install_profile'] = 'standard';
+$config_directories['sync'] = 'sites/default/files/config_9hxqVMwt12seLTZj07EJ69fpBnWJUTlnOyvh5WwnJg7vrprdCp1RrtAlIcD-bP50Skapn3NkHQ/sync';
