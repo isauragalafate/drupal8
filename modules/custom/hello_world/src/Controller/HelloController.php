@@ -8,6 +8,10 @@ namespace Drupal\hello_world\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 
+/**
+ * Class HelloController
+ * @package Drupal\hello_world\Controller
+ */
 class HelloController extends ControllerBase {
   public function content() {
     return array(
