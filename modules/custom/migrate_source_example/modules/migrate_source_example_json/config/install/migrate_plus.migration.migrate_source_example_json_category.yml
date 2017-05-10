@@ -1,0 +1,49 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - migrate_source_example_json
+    - taxonomy
+id: migrate_source_example_json_category
+migration_tags: null
+migration_group: migrate_source_example_json
+label: Categories
+source:
+  plugin: migrate_source_example_url
+  data_fetcher_plugin: http
+  data_parser_plugin: json
+  urls: /json/attributes
+  item_selector: category
+  ids:
+    category_id:
+      type: integer
+  constants:
+      slash: '/'
+  fields:
+    -
+      name: category_id
+      label: 'ID of the category'
+      selector: id
+    -
+      name: category_name
+      label: 'Name of the category'
+      selector: name
+    -
+      name: category_alias
+      label: 'Alias of the category'
+      selector: alias
+process:
+  vid:
+    plugin: default_value
+    default_value: category
+  name: category_name
+  path:
+    -
+      plugin: concat
+      delimiter: null
+      source:
+        - constants/slash
+        - category_alias
+destination:
+  plugin: 'entity:taxonomy_term'
+migration_dependencies: {  }

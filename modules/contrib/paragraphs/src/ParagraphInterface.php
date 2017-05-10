@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\paragraphs\ParagraphInterface.
- */
-
 namespace Drupal\paragraphs;
 
 use Drupal\user\EntityOwnerInterface;
@@ -20,6 +15,10 @@ interface ParagraphInterface extends ContentEntityInterface, EntityOwnerInterfac
   /**
    * Gets the parent entity of the paragraph.
    *
+   * Preserves language context with translated entities.
+   *
+   * @return ContentEntityInterface
+   *   The parent entity.
    */
   public function getParentEntity();
 }

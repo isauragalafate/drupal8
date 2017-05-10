@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\paragraphs\ParagraphStorageSchema.
- */
-
 namespace Drupal\paragraphs;
 
 use Drupal\Core\Entity\ContentEntityTypeInterface;
@@ -38,6 +33,10 @@ class ParagraphStorageSchema extends SqlContentEntityStorageSchema {
     $schema = parent::getSharedTableFieldSchema($storage_definition, $table_name, $column_mapping);
     if ($storage_definition->getName() == 'status') {
       $schema['fields']['status']['initial'] = 1;
+    }
+
+    if ($storage_definition->getName() == 'behavior_settings') {
+      $schema['fields']['behavior_settings']['initial'] = serialize([]);
     }
     return $schema;
   }

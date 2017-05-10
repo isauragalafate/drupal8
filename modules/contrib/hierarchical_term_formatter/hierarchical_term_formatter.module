@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Hook implementation file for Hierarchical Term Formatter.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function hierarchical_term_formatter_theme($existing, $type, $theme, $path) {
+  return array(
+    'hierarchical_term_formatter' => array(
+      'variables' => array(
+        'terms' => array(),
+        'wrapper' => '',
+        'separator' => ' » ',
+        'link' => FALSE,
+      ),
+      'file' => 'hierarchical_term_formatter.theme.inc',
+    ),
+  );
+}

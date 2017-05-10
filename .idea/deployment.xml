@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" serverName="Drupal7">
+  <component name="PublishConfigData" serverName="Drupal8">
     <serverData>
-      <paths name="Drupal7">
+      <paths name="Drupal8">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="drupal8" />
+            <mapping local="$PROJECT_DIR$" web="web" />
           </mappings>
         </serverdata>
       </paths>

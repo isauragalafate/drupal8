@@ -1,0 +1,29 @@
+sevilla_fc_custom.news_news_promoted:
+  title: 'Manual sorting'
+  route_name: 'sevilla_fc_custom.entityqueue_news_news_promoted'
+  group: block
+
+sevilla_fc_custom.news_news_promoted_node:
+  title: 'Manual sorting node'
+  route_name: 'sevilla_fc_custom.entityqueue_news_news_promoted'
+  group: node
+
+sevilla_fc_custom.news_news_promoted_b:
+  title: 'Manual sorting b'
+  route_name: 'sevilla_fc_custom.settings'
+  group: block
+
+sevilla_fc_custom.news_news_promoted_node_b:
+  title: 'Manual sorting node b'
+  route_name: 'sevilla_fc_custom.settings'
+  group: node
+
+sevilla_fc_custom.news_news_promoted_c:
+  title: 'Manual sorting c'
+  route_name: 'sevilla_fc_custom.settings'
+  group: 'block'
+
+sevilla_fc_custom.news_news_promoted_node_c:
+  title: 'Manual sorting node c'
+  route_name: 'sevilla_fc_custom.settings'
+  group: 'node'

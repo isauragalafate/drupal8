@@ -1,0 +1,19 @@
+name: Extra Site Info
+description: Extend the site info form in the admin panel.
+package: Custom
+
+type: module
+core: 8.x
+
+#dependencies:
+#  - datetime
+#  - link
+#  - views
+
+#configure: extra_site_info.settings
+
+#hidden: true
+
+# Note: do not add the 'version'  property yourself!
+# It will be added automatically by the packager on drupal.org.
+#version: 1.0

@@ -1,0 +1,5 @@
+sevilla_fc_custom.settings:
+  title: 'Sevilla FC'
+  parent: system.admin_config_system
+  description: 'Configure Sevilla FC.'
+  route_name: sevilla_fc_custom.settings
