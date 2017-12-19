@@ -10,7 +10,9 @@
         "drupal/console": "~1.0",
         "drupal/core": "8.3.*",
         "drupal/ldap": "^7.2@beta",
-        "drupal/reference_table_formatter": "^1.0@RC"
+        "drupal/reference_table_formatter": "^1.0@RC",
+        "drupal/panels": "^4.2",
+        "drupal/page_manager": "^4.0@beta"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
