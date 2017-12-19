@@ -1,0 +1,61 @@
+# Migration of data from CSV into content type "element".
+#
+# Many configuration parameters are described in the 'example_hybrid_base' and
+# 'example_hybrid_i18n' migrations, refer to those for more information.
+#
+# General metadata
+id: example_element_en
+label: Element data in English
+migration_group: example_element
+migration_tags:
+  - node
+  - element
+  - csv
+# Migration source
+source:
+  # We will be importing from a CSV file, so we need the
+  # 'migrate_source_csv' module. It provides a source with the ID 'csv.
+  plugin: csv
+  # Specify the name of the CSV file, which lives in the directory
+  # import/element. See migrate_example_i18n_migration_plugins_alter() for how
+  # this is found.
+  path: 'element.data.en.csv'
+  # Number of rows at the beginning which are not actual data.
+  header_row_count: 1
+  # The unique ID for each row is in this column.
+  keys:
+    - Symbol
+  # Legend of source fields.
+  #
+  # The keys are the column names as they appear in the CSV
+  # and the values are descriptions which would appear in the UI.
+  fields:
+    Name: 'Name'
+    Symbol: 'Symbol'
+    'Atomic Number': 'Atomic number'
+    'Discovered By': 'Name of people who discovered the element'
+  # Constant values for the migration.
+  constants:
+    lang_en: en
+    node_element: 'element'
+# Migration destination
+destination:
+  plugin: 'entity:node'
+# Migration processes
+process:
+  # We simply map most of the source fields to the destination.
+  type: constants/node_element
+  title: Name
+  langcode: constants/lang_en
+  field_element_symbol: Symbol
+  # The 'Discovered By' column contains comma-separated values.
+  # We use the 'explode' plugin to split it into an array of values.
+  field_element_discoverer:
+    plugin: explode
+    delimiter: ', '
+    source: Discovered By
+# General dependencies
+dependencies:
+  enforced:
+    module:
+      - migrate_example_i18n

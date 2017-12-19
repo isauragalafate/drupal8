@@ -1,0 +1,12 @@
+name: Node Option Premium
+type: module
+description: 'Shows only the teasers of premium contents to unprivileged users.'
+# package: Utility
+# core: 8.x
+dependencies:
+  - node
+# Information added by Drupal.org packaging script on 2016-08-16
+version: '8.x-1.x-dev'
+core: '8.x'
+project: 'nopremium'
+datestamp: 1471365720

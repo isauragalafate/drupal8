@@ -53,6 +53,13 @@
       for (var i = 0; i < il; i++) {
         activeLinks[i].classList.add('is-active');
       }
+
+      // Mark language links in the current language as active, no matter the query string.
+      var languageLinks = context.querySelectorAll('.language-link[hreflang="' + path.currentLanguage + '"]');
+      for (var i = 0; i < languageLinks.length; i++) {
+        languageLinks[i].parentNode.classList.add('is-active');
+        languageLinks[i].classList.add('is-active');
+      }
     },
     detach: function (context, settings, trigger) {
       if (trigger === 'unload') {

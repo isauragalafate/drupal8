@@ -1,0 +1,89 @@
+INTERVIEWS
+  ID,TYPE,           DATE,                TITLE,ABSTRACT,CONTENT
+  ID,TIPO DE NOTICIA,FECHA DE PUBLICACION,TITULO,ENTRADILLA,CONTENIDO
+PRESS
+  ID,TYPE,DATE,TITLE,ABSTRACT,CONTENT
+RESULTS
+  ID,TYPE,           DATE,                TITLE,AUTHOR,REFERENCE,ATTACHMENT,CONTENT, ABSTRACT
+
+# Migrate of nodes of type "story" from Drupal 6 to Drupal 8.
+#
+# This file demonstrates migration of content translated with
+# the D6 'content_translation' module.
+#
+# Many configuration parameters are described in detail in this
+# file, so it's a good starting point.
+
+# Migration metadata
+id: example_hybrid_base
+label: Hybrid base data
+# Migrations can be organized into groups, one group per migration.
+migration_group: example_hybrid
+# Migrations can also be organized by tags, potentially many tags per
+# migration.
+migration_tags:
+  - node
+  - story
+  - d6
+# Migration source
+source:
+  # Since we want to migrate nodes from Drupal 6, we need to
+  # use the 'd6_node' source plugin. The plugin icomes with core's
+  # 'migrate_drupal' module.
+  #
+  # If you need additional functionality, you can create a custom
+  # plugin that extends this one. See the example_dog_base migration
+  # for an example of that.
+  plugin: d6_node
+  # The type of nodes we want to migrate.
+  #
+  # This parameter tells the source plugin that only nodes of
+  # type 'story' are to be read from the Drupal 6 database.
+  node_type: story
+  # Specify source database.
+  #
+  # The database settings need to be defined in the global
+  # $databases variable. See the sample 'settings.local.php'
+  # file provided in the project to learn how to add these
+  # settings. For this example, the settings are in
+  # $databases['drupal_6'].
+  key: drupal_6
+  # Constant values for the migration.
+  constants:
+    node_article: article
+    body_format: full_html
+# Migration destination
+destination:
+  # Since we want to create 'node' entities from the source data,
+  # we specify 'entity:node' as the destination plugin.
+  plugin: 'entity:node'
+# Migration processes
+# This does the mapping between source fields and destination fields.
+process:
+  # The type of node we wish to create, in this case 'article'.
+  type: constants/node_article
+  # Destination node language.
+  # If the D6 node is "Language neutral", this will be empty. So
+  # default it to 'und'.
+  langcode:
+    plugin: default_value
+    source: language
+    default_value: und
+  # The body is a special case, since it has both a value and a format.
+  # We assign body data as the value, and 'full_html' as the format.
+  'body/value': body
+  'body/format': constants/body_format
+  # Some other properties which we migrate as-is.
+  title: title
+  field_one_liner: field_one_liner
+  sticky: sticky
+  status: status
+  promote: promote
+# General dependencies
+#
+# This migration depends on our custom module. If the module is
+# uninstalled, the configuration should also be uninstalled.
+dependencies:
+  enforced:
+    module:
+      - migrate_example_i18n

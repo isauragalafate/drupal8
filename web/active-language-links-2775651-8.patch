@@ -1,0 +1,47 @@
+diff --git a/core/lib/Drupal/Core/EventSubscriber/ActiveLinkResponseFilter.php b/core/lib/Drupal/Core/EventSubscriber/ActiveLinkResponseFilter.php
+index 2f965e1..1b8b07b 100644
+--- a/core/lib/Drupal/Core/EventSubscriber/ActiveLinkResponseFilter.php
++++ b/core/lib/Drupal/Core/EventSubscriber/ActiveLinkResponseFilter.php
+@@ -192,14 +192,17 @@ public static function setLinkActiveClass($html_markup, $current_path, $is_front
+       // The query parameters of an active link are equal to the current
+       // parameters.
+       if ($add_active) {
+-        if ($query) {
+-          if (!$node->hasAttribute('data-drupal-link-query') || $node->getAttribute('data-drupal-link-query') !== Json::encode($query)) {
+-            $add_active = FALSE;
++        // Only remove the "active" class if the element is not of the class "language-link".
++        if (!in_array('language-link', explode(' ', $class))) {
++          if ($query) {
++            if (!$node->hasAttribute('data-drupal-link-query') || $node->getAttribute('data-drupal-link-query') !== Json::encode($query)) {
++              $add_active = FALSE;
++            }
+           }
+-        }
+-        else {
+-          if ($node->hasAttribute('data-drupal-link-query')) {
+-            $add_active = FALSE;
++          else {
++            if ($node->hasAttribute('data-drupal-link-query')) {
++              $add_active = FALSE;
++            }
+           }
+         }
+       }
+diff --git a/core/misc/active-link.js b/core/misc/active-link.js
+index 9cf55b4..ae6c034 100644
+--- a/core/misc/active-link.js
++++ b/core/misc/active-link.js
+@@ -53,6 +53,12 @@
+       for (var i = 0; i < il; i++) {
+         activeLinks[i].classList.add('is-active');
+       }
++
++      // Mark language links in the current language as active, no matter the query string.
++      var languageLinks = context.querySelectorAll('.language-link[hreflang="' + path.currentLanguage + '"]');
++      for (var i = 0; i < languageLinks.length; i++) {
++        languageLinks[i].classList.add('is-active');
++      }
+     },
+     detach: function (context, settings, trigger) {
+       if (trigger === 'unload') {
+
