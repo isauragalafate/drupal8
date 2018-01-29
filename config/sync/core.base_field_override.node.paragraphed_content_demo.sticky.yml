@@ -1,0 +1,22 @@
+uuid: 5fbfa975-7487-4aec-af15-25e3293ce2b4
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.paragraphed_content_demo
+id: node.paragraphed_content_demo.sticky
+field_name: sticky
+entity_type: node
+bundle: paragraphed_content_demo
+label: 'Sticky at top of lists'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean
