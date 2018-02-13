@@ -8,7 +8,6 @@ dependencies:
     - node.type.page
   module:
     - text
-    - title
     - user
 _core:
   default_config_hash: rN2zrScZAJ9xB16hm_Deb9QJKy6JXnn0PdI2n5Z3KRs
@@ -28,12 +27,12 @@ content:
   links:
     weight: 101
     region: content
+    settings: {  }
+    third_party_settings: {  }
   title:
-    type: linked_and_wrapped
+    type: string
     settings:
-      tag: h2
-      linked: true
-      classes: ''
+      link_to_entity: false
     weight: -5
     label: above
     third_party_settings: {  }

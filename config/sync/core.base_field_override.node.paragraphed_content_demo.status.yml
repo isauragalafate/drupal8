@@ -1,20 +1,20 @@
-uuid: 5fbfa975-7487-4aec-af15-25e3293ce2b4
+uuid: 65b2e00c-6ead-46b4-8e12-066e9e7d1b15
 langcode: en
 status: true
 dependencies:
   config:
     - node.type.paragraphed_content_demo
-id: node.paragraphed_content_demo.sticky
-field_name: sticky
+id: node.paragraphed_content_demo.status
+field_name: status
 entity_type: node
 bundle: paragraphed_content_demo
-label: 'Sticky at top of lists'
-description: ''
+label: 'Publishing status'
+description: 'A boolean indicating the published state.'
 required: false
-translatable: true
+translatable: false
 default_value:
   -
-    value: 0
+    value: 1
 default_value_callback: ''
 settings:
   on_label: 'On'

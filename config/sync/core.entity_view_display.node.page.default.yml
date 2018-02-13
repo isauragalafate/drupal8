@@ -18,15 +18,19 @@ content:
   body:
     label: hidden
     type: text_default
-    weight: 0
+    weight: 1
     settings: {  }
     third_party_settings: {  }
     region: content
-  links:
-    weight: 1
+  title:
+    type: string
+    weight: 0
     region: content
-    settings: {  }
+    label: above
+    settings:
+      link_to_entity: false
     third_party_settings: {  }
 hidden:
   langcode: true
-  title: true
+  links: true
+  submitted: true

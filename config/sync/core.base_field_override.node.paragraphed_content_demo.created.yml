@@ -1,20 +1,18 @@
-uuid: a2d0a3be-5109-4873-9771-b040c571e6dd
+uuid: 3022e0b7-2809-47b9-a196-38ba9d0262ab
 langcode: en
 status: true
 dependencies:
   config:
     - node.type.paragraphed_content_demo
-  module:
-    - path
-id: node.paragraphed_content_demo.path
-field_name: path
+id: node.paragraphed_content_demo.created
+field_name: created
 entity_type: node
 bundle: paragraphed_content_demo
-label: 'URL alias'
-description: ''
+label: 'Authored on'
+description: 'The time that the node was created.'
 required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''
 settings: {  }
-field_type: path
+field_type: created
