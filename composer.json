@@ -15,7 +15,8 @@
         "drupal/page_manager": "^4.0@beta",
         "drupal/easy_breadcrumb": "^1.6",
         "drupal/manage_display": "^1.0@alpha",
-        "drupal/addtoany": "^1.8"
+        "drupal/addtoany": "^1.8",
+        "drupal/redirect": "^1.1"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
