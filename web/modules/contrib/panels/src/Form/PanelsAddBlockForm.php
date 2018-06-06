@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Provides a form for adding a block plugin to a variant.
  */
-class PanelsAddBlockForm extends PanelsBlockConfigureFormBase   {
+class PanelsAddBlockForm extends PanelsBlockConfigureFormBase {
 
   /**
    * The block plugin manager.
@@ -62,7 +62,7 @@ class PanelsAddBlockForm extends PanelsBlockConfigureFormBase   {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL, $tempstore_id = NULL, $machine_name = NULL, $block_id = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $tempstore_id = NULL, $machine_name = NULL, $block_id = NULL, Request $request = NULL) {
     $form = parent::buildForm($form, $form_state, $tempstore_id, $machine_name, $block_id);
     $form['region']['#default_value'] = $request->query->get('region');
     return $form;

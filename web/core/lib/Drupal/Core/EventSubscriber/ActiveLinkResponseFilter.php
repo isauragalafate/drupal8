@@ -103,7 +103,7 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
    *
    * This is a PHP implementation of the drupal.active-link JavaScript library.
    *
-   * @param string $html_markup.
+   * @param string $html_markup
    *   The HTML markup to update.
    * @param string $current_path
    *   The system path of the currently active page.
@@ -126,6 +126,9 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
   public static function setLinkActiveClass($html_markup, $current_path, $is_front, $url_language, array $query) {
     $search_key_current_path = 'data-drupal-link-system-path="' . $current_path . '"';
     $search_key_front = 'data-drupal-link-system-path="&lt;front&gt;"';
+
+    // Receive the query in a standardized manner.
+    ksort($query);
 
     $offset = 0;
     // There are two distinct conditions that can make a link be marked active:
@@ -192,17 +195,14 @@ class ActiveLinkResponseFilter implements EventSubscriberInterface {
       // The query parameters of an active link are equal to the current
       // parameters.
       if ($add_active) {
-        // Only remove the "active" class if the element is not of the class "language-link".
-        if (!in_array('language-link', explode(' ', $class))) {
-          if ($query) {
-            if (!$node->hasAttribute('data-drupal-link-query') || $node->getAttribute('data-drupal-link-query') !== Json::encode($query)) {
-              $add_active = FALSE;
-            }
+        if ($query) {
+          if (!$node->hasAttribute('data-drupal-link-query') || $node->getAttribute('data-drupal-link-query') !== Json::encode($query)) {
+            $add_active = FALSE;
           }
-          else {
-            if ($node->hasAttribute('data-drupal-link-query')) {
-              $add_active = FALSE;
-            }
+        }
+        else {
+          if ($node->hasAttribute('data-drupal-link-query')) {
+            $add_active = FALSE;
           }
         }
       }
