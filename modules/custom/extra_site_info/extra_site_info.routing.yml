@@ -1,7 +1,0 @@
-extra_site_info.content:
-  path: '/extra_site_info'
-  defaults:
-    _controller: '\Drupal\extra_site_info\Controller\ExtraSiteInfoController::content'
-    _title: 'Extra Site Info'
-  requirements:
-    _permission: 'access content'

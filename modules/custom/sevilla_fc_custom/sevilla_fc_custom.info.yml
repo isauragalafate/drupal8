@@ -1,6 +1,0 @@
-name: Sevilla FC Customization
-type: module
-description: Specific features for Sevilla FC project.
-core: 8.x
-package: Custom
-configure: sevilla_fc_custom.settings

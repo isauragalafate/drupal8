@@ -1,6 +1,0 @@
-name: IAC Migrate
-type: module
-description: IAC content migrations.
-core: 8.x
-package: IAC
-configure: iac_migrate.settings
