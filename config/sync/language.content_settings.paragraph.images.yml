@@ -1,4 +1,4 @@
-uuid: 11edd94f-4f23-47ed-a267-695587749344
+uuid: 562259d1-b2a7-43d7-bdb6-38f367cad4e6
 langcode: en
 status: true
 dependencies:
@@ -8,11 +8,11 @@ dependencies:
     - content_translation
 third_party_settings:
   content_translation:
-    enabled: false
+    enabled: true
 _core:
   default_config_hash: hIbqbzBY-qhDTpbOAoJfzC1Nxq0IDwjJqjT3QMvV8ds
 id: paragraph.images
 target_entity_type_id: paragraph
 target_bundle: images
 default_langcode: site_default
-language_alterable: false
+language_alterable: true

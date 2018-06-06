@@ -1,0 +1,25 @@
+uuid: 3130945e-d833-4111-a6cd-b25ffd1c5347
+langcode: en
+status: true
+dependencies:
+  config:
+    - config_pages.type.homepage
+    - core.entity_view_mode.config_pages.full
+    - field.field.config_pages.homepage.field_component
+  module:
+    - entity_reference_revisions
+id: config_pages.homepage.full
+targetEntityType: config_pages
+bundle: homepage
+mode: full
+content:
+  field_component:
+    type: entity_reference_revisions_entity_view
+    weight: 0
+    label: hidden
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    region: content
+hidden: {  }

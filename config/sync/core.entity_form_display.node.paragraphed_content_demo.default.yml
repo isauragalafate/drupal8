@@ -1,4 +1,4 @@
-uuid: d4fb19ed-f9cf-4064-823c-819f2d57bceb
+uuid: 57ad3dd6-4a0c-47d1-9c64-981f83be3e3b
 langcode: en
 status: true
 dependencies:
@@ -9,7 +9,7 @@ dependencies:
     - paragraphs
     - path
 _core:
-  default_config_hash: yioy4EZznMBXxS_QdIZldhBMJx_q2ub2xK_VBh_9IZs
+  default_config_hash: VXizCUPSjkP0Ov_V9cY13_UgBnG9k1eR7IT6TNrgt9I
 id: node.paragraphed_content_demo.default
 targetEntityType: node
 bundle: paragraphed_content_demo
@@ -36,7 +36,7 @@ content:
     settings:
       title: Paragraph
       title_plural: Paragraphs
-      edit_mode: open
+      edit_mode: closed
       add_mode: dropdown
       form_display_mode: default
       default_paragraph_type: ''
@@ -61,6 +61,13 @@ content:
       display_label: true
     third_party_settings: {  }
     region: content
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 120
+    region: content
+    third_party_settings: {  }
   sticky:
     type: boolean_checkbox
     weight: 16

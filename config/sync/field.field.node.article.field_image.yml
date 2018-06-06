@@ -1,4 +1,4 @@
-uuid: b761a157-712d-4f4b-9662-d43674b75f0a
+uuid: c7e85bc0-07e8-4d5d-af09-e329698d17ac
 langcode: en
 status: true
 dependencies:
@@ -6,14 +6,7 @@ dependencies:
     - field.storage.node.field_image
     - node.type.article
   module:
-    - content_translation
     - image
-third_party_settings:
-  content_translation:
-    translation_sync:
-      alt: alt
-      title: title
-      file: '0'
 _core:
   default_config_hash: tgJzhA7Swh4M_gWU5FwFe5lPxPj5rebpMbvhpdNrERs
 id: node.article.field_image

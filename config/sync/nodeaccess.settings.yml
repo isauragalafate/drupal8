@@ -1,0 +1,83 @@
+grants:
+  view: 1
+  edit: 1
+  delete: 1
+priority: 0
+preserve: 1
+_core:
+  default_config_hash: Zno4MMkbreZeJZgnY0DXCPksXkuYye3MyIFlVuh-xLc
+article:
+  anonymous:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  authenticated:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  administrator:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+  author:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+page:
+  anonymous:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  authenticated:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  administrator:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+  author:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+paragraphed_content_demo:
+  anonymous:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  authenticated:
+    grant_view: '1'
+    grant_update: 0
+    grant_delete: 0
+  administrator:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+  author:
+    grant_view: 0
+    grant_update: 0
+    grant_delete: 0
+role_alias:
+  anonymous:
+    allow: '1'
+    alias: 'Anonymous user'
+    weight: '0'
+    name: 'Anonymous user'
+  authenticated:
+    allow: '1'
+    alias: 'Authenticated user'
+    weight: '0'
+    name: 'Authenticated user'
+  administrator:
+    allow: '1'
+    alias: Administrator
+    weight: '0'
+    name: Administrator
+role_map:
+  anonymous: 1
+  authenticated: 2
+  administrator: 3
+allowed_types:
+  article: 1
+  page: 1
+  paragraphed_content_demo: 1

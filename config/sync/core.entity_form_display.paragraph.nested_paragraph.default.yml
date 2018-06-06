@@ -1,4 +1,4 @@
-uuid: cbd1ddaa-8acd-40a4-9144-1861f1d3f8cc
+uuid: 60fc3303-683d-4b4d-a099-7e9f4826d93e
 langcode: en
 status: true
 dependencies:
@@ -8,7 +8,7 @@ dependencies:
   module:
     - paragraphs
 _core:
-  default_config_hash: gBH1-NmxyJZL1T2wCcNQGsVH_z4giGbzPov4CzhdzYM
+  default_config_hash: koYYwlW52xb05AiGtIbUHVvueeTQi6lKOx4z8s2umt0
 id: paragraph.nested_paragraph.default
 targetEntityType: paragraph
 bundle: nested_paragraph
@@ -24,7 +24,7 @@ content:
       form_display_mode: default
       default_paragraph_type: ''
     third_party_settings: {  }
-    type: entity_reference_paragraphs
+    type: paragraphs
     region: content
 hidden:
   created: true

@@ -1,6 +1,6 @@
-uuid: 6ef454c1-fdfc-4f8d-87a3-ab6a74fa0ca2
-name: Site-Install
-mail: admin@example.com
+uuid: 51132984-4434-459c-888b-8ee8790202a9
+name: 'Drupal8 Learning'
+mail: igalafate@emergya.com
 slogan: ''
 page:
   403: ''
@@ -11,4 +11,4 @@ weight_select_max: 100
 langcode: en
 default_langcode: en
 _core:
-  default_config_hash: AyT9s8OUcclfALRE_imByOMgtZ19eOlqdF6zI3p7yqo
+  default_config_hash: yXadRE77Va-G6dxhd2kPYapAvbnSvTF6hO4oXiOEynI

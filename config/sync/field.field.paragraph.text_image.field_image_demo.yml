@@ -1,4 +1,4 @@
-uuid: 09c78e9a-1e3c-4b23-80cc-e880689e47db
+uuid: dc10814e-2221-4f7a-b764-16521f9f1e89
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,14 @@ dependencies:
     - field.storage.paragraph.field_image_demo
     - paragraphs.paragraphs_type.text_image
   module:
+    - content_translation
     - image
+third_party_settings:
+  content_translation:
+    translation_sync:
+      alt: alt
+      title: title
+      file: '0'
 _core:
   default_config_hash: VmQhPdQ3dtCuW3k_lHN-OSNNov3o0JvlNZ3XwopZreE
 id: paragraph.text_image.field_image_demo
@@ -16,7 +23,7 @@ bundle: text_image
 label: Image
 description: ''
 required: false
-translatable: false
+translatable: true
 default_value: {  }
 default_value_callback: ''
 settings:

@@ -1,9 +1,11 @@
-uuid: 8b8f34ad-8b37-4eb5-832c-9f28de610718
+uuid: 49e9fb42-1774-4de9-903d-3aff571af938
 langcode: en
 status: true
 dependencies: {  }
 _core:
-  default_config_hash: hMUUkaZ5ltrgaRH72GVepp2lDk8VRs6AzJQAXaTgMOg
+  default_config_hash: 9GmCtZVKKex_1z-HRDXnKHJWsB67Vu03tbzRNz60owU
 id: user
 label: User
+icon_uuid: null
+description: 'Use <em>User</em> for adding a reference to an existing user.'
 behavior_plugins: {  }
