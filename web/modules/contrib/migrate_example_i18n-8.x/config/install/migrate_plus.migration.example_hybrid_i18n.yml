@@ -1,0 +1,92 @@
+# Migrate of nodes of type "story" from Drupal 6 to Drupal 8.
+#
+# This file demonstrates migration of content translated with
+# the D6 'content_translation' module.
+#
+# The untranslated data for "story" nodes comes from 'example_hybrid_base',
+# so refer to that before reading this.
+
+# Migration metadata
+id: example_hybrid_i18n
+label: Hybrid translations
+migration_group: example_hybrid
+migration_tags:
+  - node
+  - story
+  - d6
+# Migration source
+source:
+  plugin: d6_node
+  node_type: story
+  # We want this source to give us only translations of nodes, not the
+  # original languages.
+  translations: true
+  # Specify source database.
+  key: drupal_6
+  # Constant values for the migration.
+  constants:
+    body_format: full_html
+    node_article: article
+# Migration destination
+destination:
+  plugin: 'entity:node'
+  # Important! Create translations for existing nodes.
+  #
+  # This tells the destination plugin not to create a new node for
+  # each record. Instead, it should add translations to existing
+  # nodes.
+  translations: true
+# Migration processes
+# This does the mapping between source fields and destination fields.
+process:
+  type: constants/node_article
+  # The example_hybrid_base migrations has already created
+  # untranslated nodes. We want to add our translation
+  # to that existing node. How do we do that?
+  #
+  # The earlier example_hybrid_base migration identified each source
+  # D6 node with its 'tnid' property. For each such node, it created
+  # a D8 node, which has a 'nid'. Every time it did that, it recorded
+  # a mapping between those values, eg:
+  #
+  # +-------------+-----------------+
+  # | source_tnid | destination_nid |
+  # +-------------+-----------------+
+  # |      5      |       8         |
+  # |      6      |       9         |
+  # |      8      |      10         |
+  # |     ...     |      ...        |
+  # +-------------+-----------------+
+  #
+  # In the current example_hybrid_i18n migration, we use the 'migration'
+  # plugin. This means: when you see a D6 source node, find its tnid,
+  # and look it up in the table above. Use the resulting nid for the
+  # destination node.
+  #
+  # For example, if a D6 node has tnid = 6, the migration will look it
+  # up in the table, and find that the destination nid is 9. Then it
+  # knows to add the translation to the node with that nid.
+  nid:
+    plugin: migration
+    source: tnid
+    migration: example_hybrid_base
+  langcode: language
+  title: title
+  'body/format': constants/body_format
+  'body/value': body
+  field_one_liner: field_one_liner
+  sticky: sticky
+  status: status
+  promote: promote
+# Migration dependencies
+#
+# This migration needs untranslated nodes to already exist, so
+# mark it as dependent on the example_hybrid_base migration.
+migration_dependencies:
+  required:
+    - example_hybrid_base
+# General dependencies
+dependencies:
+  enforced:
+    module:
+      - migrate_example_i18n

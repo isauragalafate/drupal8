@@ -1,0 +1,20 @@
+uuid: a2d0a3be-5109-4873-9771-b040c571e6dd
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.paragraphed_content_demo
+  module:
+    - path
+id: node.paragraphed_content_demo.path
+field_name: path
+entity_type: node
+bundle: paragraphed_content_demo
+label: 'URL alias'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: path

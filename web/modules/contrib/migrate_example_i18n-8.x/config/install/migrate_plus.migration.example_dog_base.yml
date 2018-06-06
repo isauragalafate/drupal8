@@ -1,0 +1,58 @@
+# Migration of "article" node data from Drupal 7.
+#
+# This file demonstrates migration of content translated with
+# the 'content_translation' module.
+#
+# Since a detailed description of many configuration parameters
+# has been provided in the 'hybrid_base' and 'hybrid_i18n' migrations,
+# they have not been repeated here. Kindly refer to those migrations
+# if you are looking for detailed descriptions for various paramters.
+
+# Migration metadata
+id: example_dog_base
+label: Dog base data
+migration_group: example_dog
+migration_tags:
+  - node
+  - article
+  - d7
+# Migration source
+source:
+  # Since Drupal 8.3.x, Drupal 7 content translations are supported out of the
+  # box. However, if you are using an older version of Drupal 8, you can check
+  # out the D7NodeContentTranslation source plugin included in this module.
+  plugin: d7_node
+  # The type of nodes we want to migrate.
+  node_type: article
+  # Specify source database.
+  key: drupal_7_content
+  # Static values for the migration.
+  constants:
+    uid_root: 1
+    node_article: 'article'
+# Migration destination
+destination:
+  plugin: 'entity:node'
+# Migration processes
+process:
+  # Specify the type of node we wish to create.
+  type: constants/node_article
+  # Destination node language.
+  langcode:
+    plugin: default_value
+    source: language
+    default_value: und
+  # We assign the root user as the author of migrated nodes.
+  uid: 'constants/uid_root'
+  # Some other properties which we migrate as is.
+  title: title
+  body: body
+  field_one_liner: field_one_liner
+  sticky: sticky
+  status: status
+  promote: promote
+# General dependencies
+dependencies:
+  enforced:
+    module:
+      - migrate_example_i18n

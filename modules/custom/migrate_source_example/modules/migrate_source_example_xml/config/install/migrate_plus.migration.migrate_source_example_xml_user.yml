@@ -1,0 +1,62 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - migrate_source_example_xml
+    - user
+id: migrate_source_example_xml_user
+migration_tags: null
+label: 'User migration from xml file'
+source:
+  plugin: migrate_source_example_url_xml
+  data_fetcher_plugin: file
+  data_parser_plugin: simple_xml
+  urls:
+    - source/users.xml
+  item_selector: '/users/user'
+  ids:
+    user_id:
+      type: integer
+  fields:
+    -
+      name: user_id
+      label: 'ID of the user'
+      selector: '@id'
+    -
+      name: user_name
+      label: 'Name of the user'
+      selector: 'text()'
+    -
+      name: user_email
+      label: 'Email of the user'
+      selector: '@email'
+    -
+      name: user_roles
+      label: 'Roles of the user'
+      selector: '@roles'
+process:
+  name:
+    plugin: dedupe_entity
+    field: name
+    entity_type: user
+    source: user_name
+  roles:
+    -
+      plugin: explode
+      delimiter: ':'
+      source: user_roles
+    -
+      plugin: static_map
+      map:
+        1: administrator
+        2: editor
+  mail: user_email
+  init: user_email
+  status:
+    plugin: default_value
+    default_value: 1
+destination:
+  plugin: 'entity:user'
+template: null
+migration_dependencies: {  }
+migration_group: migrate_source_example_xml

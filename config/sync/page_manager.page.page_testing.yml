@@ -1,0 +1,16 @@
+uuid: 51df58ec-63b1-4264-ae1a-6a8c254eeaf1
+langcode: en
+status: true
+dependencies: {  }
+id: page_testing
+label: 'Page: Testing'
+description: ''
+use_admin_theme: false
+path: '/testing/{string}'
+access_logic: and
+access_conditions: {  }
+parameters:
+  string:
+    machine_name: string
+    type: string
+    label: Pagetitle

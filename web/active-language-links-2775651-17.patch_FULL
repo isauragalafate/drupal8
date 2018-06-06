@@ -1,0 +1,43 @@
+diff --git a/core/includes/theme.inc b/core/includes/theme.inc
+index 9b89250..ff265d3 100644
+--- a/core/includes/theme.inc
++++ b/core/includes/theme.inc
+@@ -704,7 +704,9 @@ function template_preprocess_links(&$variables) {
+           if (!empty($link['query'])) {
+             $query = $link['query'];
+             ksort($query);
+-            $li_attributes['data-drupal-link-query'] = Json::encode($query);
++            if (!isset($query['_exception_statuscode'])) {
++              $li_attributes['data-drupal-link-query'] = Json::encode($query);
++            }
+           }
+ 
+           /** @var \Drupal\Core\Url $url */
+diff --git a/core/lib/Drupal/Core/Utility/LinkGenerator.php b/core/lib/Drupal/Core/Utility/LinkGenerator.php
+index 0ec5280..0272fad 100644
+--- a/core/lib/Drupal/Core/Utility/LinkGenerator.php
++++ b/core/lib/Drupal/Core/Utility/LinkGenerator.php
+@@ -120,7 +120,9 @@ public function generate($text, Url $url) {
+       if (!empty($variables['options']['query'])) {
+         $query = $variables['options']['query'];
+         ksort($query);
+-        $variables['options']['attributes']['data-drupal-link-query'] = Json::encode($query);
++        if (!isset($query['_exception_statuscode'])) {
++          $variables['options']['attributes']['data-drupal-link-query'] = Json::encode($query);
++        }
+       }
+ 
+       // Add a "data-drupal-link-system-path" attribute to let the
+diff --git a/core/modules/system/system.module b/core/modules/system/system.module
+index 93f4e9b..7fd916c 100644
+--- a/core/modules/system/system.module
++++ b/core/modules/system/system.module
+@@ -681,7 +681,7 @@ function system_js_settings_alter(&$settings, AttachedAssetsInterface $assets) {
+   if ($route_match instanceof StackedRouteMatchInterface) {
+     $route_match = $route_match->getMasterRouteMatch();
+   }
+-  $current_path = $route_match->getRouteName() ? Url::fromRouteMatch($route_match)->getInternalPath() : '';
++  $current_path = $route_match->getRouteName() ? Url::fromRouteMatch($route_match)->getInternalPath() : Url::fromRoute('<current>')->getInternalPath();
+   $current_path_is_admin = \Drupal::service('router.admin_context')->isAdminRoute($route_match->getRouteObject());
+   $path_settings = [
+     'baseUrl' => $request->getBaseUrl() . '/',

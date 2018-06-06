@@ -1,0 +1,14 @@
+sevilla_fc_custom.settings:
+  path: '/admin/config/sevilla_fc_custom/settings'
+  defaults:
+    _form: '\Drupal\sevilla_fc_custom\Form\SevillaFcCustomConfigForm'
+    _title: 'Sevilla FC - Settings'
+  requirements:
+    _permission: 'administer sevilla_fc_custom'
+
+sevilla_fc_custom.entityqueue_news_news_promoted:
+  path: '/admin/structure/entityqueue/news_news_promoted/news_news_promoted'
+  defaults:
+    _title: 'Promoted News in the news page'
+  requirements:
+    _permission: 'administer sevilla_fc_custom'

@@ -1,0 +1,70 @@
+# Migration of data from CSV into translations of content type "element".
+#
+# Many configuration parameters are described in the 'example_hybrid_base' and
+# 'example_hybrid_i18n' migrations, refer to those for more information.
+#
+# The untranslated data for "element" nodes comes from 'example_element_en', so
+# refer to that before reading this.
+#
+# General metadata
+id: example_element_es
+label: Element data in Spanish
+migration_group: example_element
+migration_tags:
+  - node
+  - element
+  - csv
+# Migration source
+source:
+  # We will be importing from a CSV file, so we need the
+  # 'migrate_source_csv' module. It provides a source with the ID 'csv.
+  plugin: csv
+  # Specify the name of the CSV file, which lives in the directory
+  # import/element. See migrate_example_i18n_migration_plugins_alter() for how
+  # this is found.
+  path: 'element.data.es.csv'
+  # Number of rows at the beginning which are not actual data.
+  header_row_count: 1
+  # The unique ID for each row is in this column.
+  #
+  # Special characters are not supported in column names, so I renamed
+  # fields to remove accents. Eg: 'Símbolo' becomes 'Simbolo',
+  # (without an accent on the 'i').
+  keys:
+    - 'Simbolo'
+  # Legend of source fields.
+  fields:
+    'Simbolo': 'Symbol'
+    Nombre: 'Name'
+    'Numero atomico': 'Atomic number'
+    'Masa atomica': 'Atomic mass'
+  # Static values for the migration.
+  constants:
+    lang_es: es
+    node_element: 'element'
+# Migration destination
+destination:
+  plugin: 'entity:node'
+  # Important! Create translations for existing nodes.
+  translations: true
+# Migration processes
+process:
+  # Attach the translation to the already-migrated node.
+  nid:
+    plugin: migration
+    source: Simbolo
+    migration: example_element_en
+  # For the rest of the fields, migrate them as is.
+  type: constants/node_element
+  title: Nombre
+  langcode: constants/lang_es
+# Migration dependencies
+migration_dependencies:
+  required:
+    - example_element_en
+# General dependencies
+dependencies:
+  enforced:
+    module:
+      - migrate_example_i18n
+      - content_translation

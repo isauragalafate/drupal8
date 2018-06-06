@@ -1,0 +1,106 @@
+<?php
+
+use Drupal\node\Entity\NodeType;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * @file
+ * Contains iac_custom.module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function iac_custom_theme() {
+  return [
+    'pseudo_field_image' => [
+      'variables' => [
+        'image' => '',
+      ],
+      'template' => 'pseudo-field-image',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+/*function iac_custom_entity_base_field_info_alter(&$fields, \Drupal\Core\Entity\EntityTypeInterface $entity_type) {
+  $configurable_fields = ['title', 'created'];
+
+// Make fields configurable on view modes.
+  if ($entity_type->id() == 'node') {
+    foreach ($configurable_fields as $configurable_field) {
+      if (!empty($fields[$configurable_field])) {
+        $fields[$configurable_field]->setDisplayConfigurable('view', TRUE);
+      }
+    }
+  }
+}*/
+
+/**
+ * Implements hook_preprocess_node().
+ */
+/*function iac_custom_preprocess_node(&$variables) {
+  // Restore the title field in the content array if display is being managed.
+  if ($variables['label']) {
+    $variables['content']['title'] = $variables['label'];
+    // The only way to hide the title in the core node template.
+    $variables['page'] = TRUE;
+  }
+}*/
+
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function iac_custom_entity_extra_field_info() {
+  $extra = array();
+
+  foreach (NodeType::loadMultiple() as $bundle) {
+    $extra['node'][$bundle->Id()]['display']['pseudo_field_image'] = array(
+      'label' => t('Image (From Gallery)'),
+      'description' => t('This is a pseudo field to show the image promoted to the entity from its gallery related.'),
+      'weight' => 100,
+      'visible' => TRUE,
+    );
+  }
+
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function iac_custom_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('pseudo_field_image')) {
+    //TODO Filter by node type
+    $entity_types_with_promoted_image = ['job', 'agreement'];
+
+    if (in_array($entity->getType(), $entity_types_with_promoted_image)) {
+      $build['pseudo_field_image'] = [
+        '#theme' => 'pseudo_field_image',
+        '#image' => get_promoted_image_from_entity($entity),
+      ];
+    }
+  }
+}
+
+/*
+ * 
+ */
+function get_promoted_image_from_entity(EntityInterface $entity) {
+  $image = [
+    'src' => '',
+    'alt' => '',
+  ];
+
+  //TODO Change with the real data from the Gallery when the Entity is created.
+  $image = [
+    'src' => '/sites/default/files/images/default-thumbnail.jpg',
+    'alt' => 'Add any default image into the public://images folder.',
+  ];
+
+  return $image;
+}

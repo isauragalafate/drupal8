@@ -1,0 +1,18 @@
+uuid: c3195527-c79c-4917-acc1-b922ddb7c8ec
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.paragraphed_content_demo
+id: node.paragraphed_content_demo.changed
+field_name: changed
+entity_type: node
+bundle: paragraphed_content_demo
+label: Changed
+description: 'The time that the node was last edited.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: changed
