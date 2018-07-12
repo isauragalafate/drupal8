@@ -1,11 +1,11 @@
-uuid: 51132984-4434-459c-888b-8ee8790202a9
+uuid: c71aabef-2cce-4839-8419-ed620651bed8
 name: 'Drupal8 Learning'
 mail: igalafate@emergya.com
 slogan: ''
 page:
   403: ''
   404: ''
-  front: /node/1
+  front: /node
 admin_compact_mode: false
 weight_select_max: 100
 langcode: en

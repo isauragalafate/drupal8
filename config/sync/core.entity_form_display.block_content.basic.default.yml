@@ -1,4 +1,4 @@
-uuid: 2cd8416b-39ad-47d3-a729-51944ab346dd
+uuid: c8145c60-6448-47c5-b570-d0c76b33bbaa
 langcode: en
 status: true
 dependencies:
@@ -30,12 +30,5 @@ content:
     settings:
       size: 60
       placeholder: ''
-    third_party_settings: {  }
-  langcode:
-    type: language_select
-    weight: 2
-    region: content
-    settings:
-      include_locked: true
     third_party_settings: {  }
 hidden: {  }
