@@ -1,0 +1,35 @@
+uuid: 4217dce7-caee-43c9-8649-33cbac6ca25c
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.header.headerbundle
+    - field.field.header.headerbundle.field_view
+  module:
+    - paragraphs
+id: header.headerbundle.default
+targetEntityType: header
+bundle: headerbundle
+mode: default
+content:
+  field_view:
+    type: entity_reference_paragraphs
+    weight: 3
+    settings:
+      title: Paragraph
+      title_plural: Paragraphs
+      edit_mode: open
+      add_mode: dropdown
+      form_display_mode: default
+      default_paragraph_type: ''
+    third_party_settings: {  }
+    region: content
+  title:
+    type: string_textfield
+    weight: -5
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden: {  }

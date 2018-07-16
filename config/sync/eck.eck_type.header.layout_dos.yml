@@ -1,0 +1,9 @@
+uuid: 8ce4f97e-3015-459a-9e3c-c8cd39226b53
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.header
+name: Layout
+type: layout_dos
+description: ''

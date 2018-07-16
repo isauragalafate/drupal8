@@ -1,0 +1,13 @@
+uuid: 1944f6df-33e0-4454-809d-20c9943cb0b8
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.header.layout_dos
+id: header.layout_dos.default
+targetEntityType: header
+bundle: layout_dos
+mode: default
+content: {  }
+hidden:
+  title: true

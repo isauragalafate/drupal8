@@ -15,7 +15,7 @@
             "url": "https://packages.drupal.org/8"
         },
         {
-            "url": "https://github.com/Nesta/phoenix.git",
+            "url": "https://github.com/jmfegu/da_vinci.git",
             "type": "vcs"
         }
     ],
@@ -31,8 +31,8 @@
         "drupal/config_pages": "^2.2",
         "drupal/console": "^1.0.2",
         "drupal/core": "~8.5.3",
-        "drupal/da_vinci": "dev-8.x-5.x",
-        "drupal/eck": "^1.0@alpha",
+        "jmfegu/da_vinci": "1.1.1",        
+	"drupal/eck": "^1.0@alpha",
         "drupal/entity_browser": "^1.5",
         "drupal/entity_usage": "^2.0@alpha",
         "drupal/inline_entity_form": "^1.0@RC",

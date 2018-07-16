@@ -1,0 +1,21 @@
+uuid: d7039663-8287-412c-bb55-9edd5f01cec7
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - entity_reference_revisions
+    - paragraphs
+id: header.field_view
+field_name: field_view
+entity_type: header
+type: entity_reference_revisions
+settings:
+  target_type: paragraph
+module: entity_reference_revisions
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

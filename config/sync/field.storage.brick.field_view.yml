@@ -1,0 +1,21 @@
+uuid: 17c20691-13af-4970-9fee-a1b019d6583f
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+    - views
+    - viewsreference
+id: brick.field_view
+field_name: field_view
+entity_type: brick
+type: viewsreference
+settings:
+  target_type: view
+module: viewsreference
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,6 +1,6 @@
 uuid: bb3fb46c-1174-45f5-9cb5-028075205bfc
 langcode: en
-status: true
+status: false
 dependencies:
   theme:
     - da_vinci
@@ -8,7 +8,7 @@ _core:
   default_config_hash: 1kwNMuwulZz1jKEYFUcpDYqYMJCydwg5bd_-Kple4NA
 id: pagetitle
 theme: da_vinci
-region: sliding_menu
+region: top_bar
 weight: 0
 provider: null
 plugin: page_title_block

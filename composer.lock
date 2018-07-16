@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "74815417603f3bef274e0213a0dbab7b",
+    "content-hash": "9dfce843bf611af670360caffb1d8fa7",
     "packages": [
         {
             "name": "alchemy/zippy",
@@ -2765,39 +2765,6 @@
             }
         },
         {
-            "name": "drupal/da_vinci",
-            "version": "dev-8.x-5.x",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Nesta/phoenix.git",
-                "reference": "9a81e0dcd5ae45732863c09d4c2180bc0948ee4a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Nesta/phoenix/zipball/9a81e0dcd5ae45732863c09d4c2180bc0948ee4a",
-                "reference": "9a81e0dcd5ae45732863c09d4c2180bc0948ee4a",
-                "shasum": ""
-            },
-            "type": "drupal-theme",
-            "license": [
-                "GPL-2.0"
-            ],
-            "authors": [
-                {
-                    "name": "Neftalí Guerrero Pancorbo",
-                    "homepage": "https://www.drupal.org/u/nesta_",
-                    "role": "Maintainer"
-                }
-            ],
-            "description": "Da Vinci is a Classy Subtheme with Gulp, Sass Core, Sass Tools and Sass Spirit.",
-            "homepage": "https://drupal.org/project/da_vinci",
-            "support": {
-                "issues": "https://drupal.org/project/issues/da_vinci",
-                "source": "https://cgit.drupalcode.org/da_vinci"
-            },
-            "time": "2018-04-10T15:45:59+00:00"
-        },
-        {
             "name": "drupal/eck",
             "version": "1.0.0-alpha3",
             "source": {
@@ -4606,6 +4573,39 @@
                 }
             ],
             "time": "2015-04-20T18:58:01+00:00"
+        },
+        {
+            "name": "jmfegu/da_vinci",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/jmfegu/da_vinci.git",
+                "reference": "361cad2e6af7d09cd1b7c7c10ba61ff154b9ee6b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/jmfegu/da_vinci/zipball/361cad2e6af7d09cd1b7c7c10ba61ff154b9ee6b",
+                "reference": "361cad2e6af7d09cd1b7c7c10ba61ff154b9ee6b",
+                "shasum": ""
+            },
+            "type": "drupal-theme",
+            "license": [
+                "GPL-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Neftalí Guerrero Pancorbo",
+                    "homepage": "https://www.drupal.org/u/nesta_",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Da Vinci is a Classy Subtheme with Gulp, Sass Core, Sass Tools and Sass Spirit.",
+            "homepage": "https://github.com/jmfegu/da_vinci/",
+            "support": {
+                "issues": "https://drupal.org/project/issues/da_vinci",
+                "source": "https://cgit.drupalcode.org/da_vinci"
+            },
+            "time": "2018-07-10T11:44:00+00:00"
         },
         {
             "name": "league/container",
@@ -9669,7 +9669,6 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/classy_paragraphs": 10,
-        "drupal/da_vinci": 20,
         "drupal/eck": 15,
         "drupal/entity_usage": 15,
         "drupal/inline_entity_form": 5,

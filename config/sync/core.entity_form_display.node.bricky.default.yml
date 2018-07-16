@@ -4,6 +4,8 @@ status: true
 dependencies:
   config:
     - field.field.node.bricky.field_body
+    - field.field.node.bricky.field_header
+    - field.field.node.bricky.field_headerbricks
     - node.type.bricky
   module:
     - bricks_inline
@@ -17,12 +19,44 @@ mode: default
 content:
   created:
     type: datetime_timestamp
-    weight: 3
+    weight: 5
     settings: {  }
     third_party_settings: {  }
     region: content
   field_body:
+    weight: 2
+    settings:
+      match_operator: CONTAINS
+      form_mode: default
+      override_labels: false
+      label_singular: ''
+      label_plural: ''
+      collapsible: false
+      collapsed: false
+      allow_new: true
+      allow_existing: false
+      allow_duplicate: false
+    third_party_settings: {  }
+    type: bricks_tree_inline
+    region: content
+  field_header:
     weight: 1
+    settings:
+      match_operator: CONTAINS
+      form_mode: default
+      override_labels: false
+      label_singular: ''
+      label_plural: ''
+      collapsible: false
+      collapsed: false
+      allow_new: true
+      allow_existing: false
+      allow_duplicate: false
+    third_party_settings: {  }
+    type: bricks_tree_inline
+    region: content
+  field_headerbricks:
+    weight: 3
     settings:
       match_operator: CONTAINS
       form_mode: default
@@ -39,7 +73,7 @@ content:
     region: content
   path:
     type: path
-    weight: 6
+    weight: 8
     settings: {  }
     third_party_settings: {  }
     region: content
@@ -47,21 +81,21 @@ content:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 4
+    weight: 6
     third_party_settings: {  }
     region: content
   status:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 120
+    weight: 9
     region: content
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 5
+    weight: 7
     third_party_settings: {  }
     region: content
   title:
@@ -74,7 +108,7 @@ content:
     region: content
   uid:
     type: entity_reference_autocomplete
-    weight: 2
+    weight: 4
     settings:
       match_operator: CONTAINS
       size: 60

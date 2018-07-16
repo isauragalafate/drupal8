@@ -1,0 +1,9 @@
+uuid: fec3bd90-a227-45be-8514-ad5bf49eeb27
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.header
+name: Otro
+type: otro
+description: ''

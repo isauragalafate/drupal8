@@ -1,0 +1,32 @@
+uuid: 723f0a57-a179-4d8b-b48c-51a14f297443
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.header.headerbundle
+    - field.field.header.headerbundle.field_view
+  module:
+    - entity_reference_revisions
+id: header.headerbundle.default
+targetEntityType: header
+bundle: headerbundle
+mode: default
+content:
+  field_view:
+    type: entity_reference_revisions_entity_view
+    weight: -4
+    label: above
+    settings:
+      view_mode: default
+      link: ''
+    third_party_settings: {  }
+    region: content
+  title:
+    label: hidden
+    type: string
+    weight: -5
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden: {  }

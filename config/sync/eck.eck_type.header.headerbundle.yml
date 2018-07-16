@@ -1,0 +1,9 @@
+uuid: aee40805-221b-4fdc-b8b8-1d03e3fa87ae
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_entity_type.header
+name: Headerbundle
+type: headerbundle
+description: ''

@@ -1,0 +1,32 @@
+uuid: 4bc6eef3-a97b-4849-93aa-f6f8571558be
+langcode: en
+status: true
+dependencies:
+  config:
+    - eck.eck_type.header.headerbundle
+    - eck.eck_type.header.otro
+    - field.storage.node.field_headerbricks
+    - node.type.bricky
+  module:
+    - bricks
+id: node.bricky.field_headerbricks
+field_name: field_headerbricks
+entity_type: node
+bundle: bricky
+label: Headerbricks
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:header'
+  handler_settings:
+    target_bundles:
+      headerbundle: headerbundle
+      otro: otro
+    sort:
+      field: _none
+    auto_create: 0
+    auto_create_bundle: headerbundle
+field_type: bricks
