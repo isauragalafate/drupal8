@@ -1,0 +1,4 @@
+services:
+  plugin.manager.migrate_default_content.source:
+    class: Drupal\migrate_default_content\SourcePluginManager
+    parent: default_plugin_manager

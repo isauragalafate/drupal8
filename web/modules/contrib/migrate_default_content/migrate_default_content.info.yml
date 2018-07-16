@@ -1,0 +1,12 @@
+name: Migrate default content
+type: module
+description: Provides dummy content.
+# core: 8.x
+package: Migration
+dependencies:
+  - drupal:migrate (>= 8.4.x)
+# Information added by Drupal.org packaging script on 2018-04-09
+version: '8.x-2.0-alpha5'
+core: '8.x'
+project: 'migrate_default_content'
+datestamp: 1523260090

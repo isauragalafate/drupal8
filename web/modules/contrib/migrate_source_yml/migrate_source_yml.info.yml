@@ -1,0 +1,12 @@
+name: Migrate source YAML
+type: module
+description: Allows to migrate data from YAML files.
+# core: 8.x
+package: Migration
+dependencies:
+  - drupal:migrate (>= 8.4.x)
+# Information added by Drupal.org packaging script on 2018-07-05
+version: '8.x-1.0'
+core: '8.x'
+project: 'migrate_source_yml'
+datestamp: 1530800027
