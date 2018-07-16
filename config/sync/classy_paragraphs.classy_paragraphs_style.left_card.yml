@@ -1,0 +1,7 @@
+uuid: 423c619f-051f-44aa-a170-bee040a4015f
+langcode: en
+status: true
+dependencies: {  }
+id: left_card
+label: 'Left card'
+classes: left-card

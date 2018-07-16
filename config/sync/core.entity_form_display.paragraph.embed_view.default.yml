@@ -1,0 +1,24 @@
+uuid: 267ad40a-b8f3-4080-aef0-090fd057d7e0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.embed_view.field_view
+    - paragraphs.paragraphs_type.embed_view
+  module:
+    - viewsreference
+id: paragraph.embed_view.default
+targetEntityType: paragraph
+bundle: embed_view
+mode: default
+content:
+  field_view:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+    type: viewsreference_select
+    region: content
+hidden:
+  created: true
+  status: true
+  uid: true

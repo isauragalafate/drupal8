@@ -1,0 +1,29 @@
+uuid: bd28a118-bcf1-4860-8068-1896a6f73adf
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.embed_block.field_block
+    - field.field.paragraph.embed_block.field_classy_paragraphs_style
+    - paragraphs.paragraphs_type.embed_block
+id: paragraph.embed_block.default
+targetEntityType: paragraph
+bundle: embed_block
+mode: default
+content:
+  field_block:
+    weight: 0
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_classy_paragraphs_style:
+    weight: 1
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+hidden:
+  created: true
+  status: true
+  uid: true

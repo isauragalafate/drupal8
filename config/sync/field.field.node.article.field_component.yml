@@ -1,0 +1,29 @@
+uuid: 0c4bcdbd-7479-47d9-a7c6-e29887267a56
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_component
+    - node.type.article
+  module:
+    - entity_reference_revisions
+id: node.article.field_component
+field_name: field_component
+entity_type: node
+bundle: article
+label: Component
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles: null
+    target_bundles_drag_drop:
+      embed_view:
+        weight: 2
+        enabled: false
+field_type: entity_reference_revisions
