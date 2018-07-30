@@ -659,6 +659,969 @@ document.documentElement.className += ' js';
 * @preserve
 **/
 
+(function ($, Drupal, drupalSettings) {
+  var showWeight = JSON.parse(localStorage.getItem('Drupal.tableDrag.showWeight'));
+
+  Drupal.behaviors.tableDrag = {
+    attach: function attach(context, settings) {
+      function initTableDrag(table, base) {
+        if (table.length) {
+          Drupal.tableDrag[base] = new Drupal.tableDrag(table[0], settings.tableDrag[base]);
+        }
+      }
+
+      Object.keys(settings.tableDrag || {}).forEach(function (base) {
+        initTableDrag($(context).find('#' + base).once('tabledrag'), base);
+      });
+    }
+  };
+
+  Drupal.tableDrag = function (table, tableSettings) {
+    var _this = this;
+
+    var self = this;
+    var $table = $(table);
+
+    this.$table = $(table);
+
+    this.table = table;
+
+    this.tableSettings = tableSettings;
+
+    this.dragObject = null;
+
+    this.rowObject = null;
+
+    this.oldRowElement = null;
+
+    this.oldY = 0;
+
+    this.changed = false;
+
+    this.maxDepth = 0;
+
+    this.rtl = $(this.table).css('direction') === 'rtl' ? -1 : 1;
+
+    this.striping = $(this.table).data('striping') === 1;
+
+    this.scrollSettings = { amount: 4, interval: 50, trigger: 70 };
+
+    this.scrollInterval = null;
+
+    this.scrollY = 0;
+
+    this.windowHeight = 0;
+
+    this.indentEnabled = false;
+    Object.keys(tableSettings || {}).forEach(function (group) {
+      Object.keys(tableSettings[group] || {}).forEach(function (n) {
+        if (tableSettings[group][n].relationship === 'parent') {
+          _this.indentEnabled = true;
+        }
+        if (tableSettings[group][n].limit > 0) {
+          _this.maxDepth = tableSettings[group][n].limit;
+        }
+      });
+    });
+    if (this.indentEnabled) {
+      this.indentCount = 1;
+
+      var indent = Drupal.theme('tableDragIndentation');
+      var testRow = $('<tr/>').addClass('draggable').appendTo(table);
+      var testCell = $('<td/>').appendTo(testRow).prepend(indent).prepend(indent);
+      var $indentation = testCell.find('.js-indentation');
+
+      this.indentAmount = $indentation.get(1).offsetLeft - $indentation.get(0).offsetLeft;
+      testRow.remove();
+    }
+
+    $table.find('> tr.draggable, > tbody > tr.draggable').each(function () {
+      self.makeDraggable(this);
+    });
+
+    $table.before($('<button type="button" class="link tabledrag-toggle-weight"></button>').attr('title', Drupal.t('Re-order rows by numerical weight instead of dragging.')).on('click', $.proxy(function (e) {
+      e.preventDefault();
+      this.toggleColumns();
+    }, this)).wrap('<div class="tabledrag-toggle-weight-wrapper"></div>').parent());
+
+    self.initColumns();
+
+    $(document).on('touchmove', function (event) {
+      return self.dragRow(event.originalEvent.touches[0], self);
+    });
+    $(document).on('touchend', function (event) {
+      return self.dropRow(event.originalEvent.touches[0], self);
+    });
+    $(document).on('mousemove pointermove', function (event) {
+      return self.dragRow(event, self);
+    });
+    $(document).on('mouseup pointerup', function (event) {
+      return self.dropRow(event, self);
+    });
+
+    $(window).on('storage', $.proxy(function (e) {
+      if (e.originalEvent.key === 'Drupal.tableDrag.showWeight') {
+        showWeight = JSON.parse(e.originalEvent.newValue);
+        this.displayColumns(showWeight);
+      }
+    }, this));
+  };
+
+  Drupal.tableDrag.prototype.initColumns = function () {
+    var _this2 = this;
+
+    var $table = this.$table;
+    var hidden = void 0;
+    var cell = void 0;
+    var columnIndex = void 0;
+    Object.keys(this.tableSettings || {}).forEach(function (group) {
+      for (var d in _this2.tableSettings[group]) {
+        if (_this2.tableSettings[group].hasOwnProperty(d)) {
+          var field = $table.find('.' + _this2.tableSettings[group][d].target).eq(0);
+          if (field.length && _this2.tableSettings[group][d].hidden) {
+            hidden = _this2.tableSettings[group][d].hidden;
+            cell = field.closest('td');
+            break;
+          }
+        }
+      }
+
+      if (hidden && cell[0]) {
+        columnIndex = cell.parent().find('> td').index(cell.get(0)) + 1;
+        $table.find('> thead > tr, > tbody > tr, > tr').each(_this2.addColspanClass(columnIndex));
+      }
+    });
+    this.displayColumns(showWeight);
+  };
+
+  Drupal.tableDrag.prototype.addColspanClass = function (columnIndex) {
+    return function () {
+      var $row = $(this);
+      var index = columnIndex;
+      var cells = $row.children();
+      var cell = void 0;
+      cells.each(function (n) {
+        if (n < index && this.colSpan && this.colSpan > 1) {
+          index -= this.colSpan - 1;
+        }
+      });
+      if (index > 0) {
+        cell = cells.filter(':nth-child(' + index + ')');
+        if (cell[0].colSpan && cell[0].colSpan > 1) {
+          cell.addClass('tabledrag-has-colspan');
+        } else {
+          cell.addClass('tabledrag-hide');
+        }
+      }
+    };
+  };
+
+  Drupal.tableDrag.prototype.displayColumns = function (displayWeight) {
+    if (displayWeight) {
+      this.showColumns();
+    } else {
+        this.hideColumns();
+      }
+
+    $('table').findOnce('tabledrag').trigger('columnschange', !!displayWeight);
+  };
+
+  Drupal.tableDrag.prototype.toggleColumns = function () {
+    showWeight = !showWeight;
+    this.displayColumns(showWeight);
+    if (showWeight) {
+      localStorage.setItem('Drupal.tableDrag.showWeight', showWeight);
+    } else {
+      localStorage.removeItem('Drupal.tableDrag.showWeight');
+    }
+  };
+
+  Drupal.tableDrag.prototype.hideColumns = function () {
+    var $tables = $('table').findOnce('tabledrag');
+
+    $tables.find('.tabledrag-hide').css('display', 'none');
+
+    $tables.find('.tabledrag-handle').css('display', '');
+
+    $tables.find('.tabledrag-has-colspan').each(function () {
+      this.colSpan = this.colSpan - 1;
+    });
+
+    $('.tabledrag-toggle-weight').text(Drupal.t('Show row weights'));
+  };
+
+  Drupal.tableDrag.prototype.showColumns = function () {
+    var $tables = $('table').findOnce('tabledrag');
+
+    $tables.find('.tabledrag-hide').css('display', '');
+
+    $tables.find('.tabledrag-handle').css('display', 'none');
+
+    $tables.find('.tabledrag-has-colspan').each(function () {
+      this.colSpan = this.colSpan + 1;
+    });
+
+    $('.tabledrag-toggle-weight').text(Drupal.t('Hide row weights'));
+  };
+
+  Drupal.tableDrag.prototype.rowSettings = function (group, row) {
+    var field = $(row).find('.' + group);
+    var tableSettingsGroup = this.tableSettings[group];
+
+    for (var delta in tableSettingsGroup) {
+      if (tableSettingsGroup.hasOwnProperty(delta)) {
+        var targetClass = tableSettingsGroup[delta].target;
+        if (field.is('.' + targetClass)) {
+          var rowSettings = {};
+
+          for (var n in tableSettingsGroup[delta]) {
+            if (tableSettingsGroup[delta].hasOwnProperty(n)) {
+              rowSettings[n] = tableSettingsGroup[delta][n];
+            }
+          }
+          return rowSettings;
+        }
+      }
+    }
+  };
+
+  Drupal.tableDrag.prototype.makeDraggable = function (item) {
+    var self = this;
+    var $item = $(item);
+
+    $item.find('td:first-of-type').find('a').addClass('menu-item__link');
+
+    var handle = $('<a href="#" class="tabledrag-handle"><div class="handle">&nbsp;</div></a>').attr('title', Drupal.t('Drag to re-order'));
+
+    var $indentationLast = $item.find('td:first-of-type').find('.js-indentation').eq(-1);
+    if ($indentationLast.length) {
+      $indentationLast.after(handle);
+
+      self.indentCount = Math.max($item.find('.js-indentation').length, self.indentCount);
+    } else {
+      $item.find('td').eq(0).prepend(handle);
+    }
+
+    handle.on('mousedown touchstart pointerdown', function (event) {
+      event.preventDefault();
+      if (event.originalEvent.type === 'touchstart') {
+        event = event.originalEvent.touches[0];
+      }
+      self.dragStart(event, self, item);
+    });
+
+    handle.on('click', function (e) {
+      e.preventDefault();
+    });
+
+    handle.on('focus', function () {
+      self.safeBlur = true;
+    });
+
+    handle.on('blur', function (event) {
+      if (self.rowObject && self.safeBlur) {
+        self.dropRow(event, self);
+      }
+    });
+
+    handle.on('keydown', function (event) {
+      if (event.keyCode !== 9 && !self.rowObject) {
+        self.rowObject = new self.row(item, 'keyboard', self.indentEnabled, self.maxDepth, true);
+      }
+
+      var keyChange = false;
+      var groupHeight = void 0;
+
+      switch (event.keyCode) {
+        case 37:
+        case 63234:
+          keyChange = true;
+          self.rowObject.indent(-1 * self.rtl);
+          break;
+
+        case 38:
+        case 63232:
+          {
+            var $previousRow = $(self.rowObject.element).prev('tr:first-of-type');
+            var previousRow = $previousRow.get(0);
+            while (previousRow && $previousRow.is(':hidden')) {
+              $previousRow = $(previousRow).prev('tr:first-of-type');
+              previousRow = $previousRow.get(0);
+            }
+            if (previousRow) {
+              self.safeBlur = false;
+              self.rowObject.direction = 'up';
+              keyChange = true;
+
+              if ($(item).is('.tabledrag-root')) {
+                groupHeight = 0;
+                while (previousRow && $previousRow.find('.js-indentation').length) {
+                  $previousRow = $(previousRow).prev('tr:first-of-type');
+                  previousRow = $previousRow.get(0);
+                  groupHeight += $previousRow.is(':hidden') ? 0 : previousRow.offsetHeight;
+                }
+                if (previousRow) {
+                  self.rowObject.swap('before', previousRow);
+
+                  window.scrollBy(0, -groupHeight);
+                }
+              } else if (self.table.tBodies[0].rows[0] !== previousRow || $previousRow.is('.draggable')) {
+                self.rowObject.swap('before', previousRow);
+                self.rowObject.interval = null;
+                self.rowObject.indent(0);
+                window.scrollBy(0, -parseInt(item.offsetHeight, 10));
+              }
+
+              handle.trigger('focus');
+            }
+            break;
+          }
+
+        case 39:
+        case 63235:
+          keyChange = true;
+          self.rowObject.indent(self.rtl);
+          break;
+
+        case 40:
+        case 63233:
+          {
+            var $nextRow = $(self.rowObject.group).eq(-1).next('tr:first-of-type');
+            var nextRow = $nextRow.get(0);
+            while (nextRow && $nextRow.is(':hidden')) {
+              $nextRow = $(nextRow).next('tr:first-of-type');
+              nextRow = $nextRow.get(0);
+            }
+            if (nextRow) {
+              self.safeBlur = false;
+              self.rowObject.direction = 'down';
+              keyChange = true;
+
+              if ($(item).is('.tabledrag-root')) {
+                groupHeight = 0;
+                var nextGroup = new self.row(nextRow, 'keyboard', self.indentEnabled, self.maxDepth, false);
+                if (nextGroup) {
+                  $(nextGroup.group).each(function () {
+                    groupHeight += $(this).is(':hidden') ? 0 : this.offsetHeight;
+                  });
+                  var nextGroupRow = $(nextGroup.group).eq(-1).get(0);
+                  self.rowObject.swap('after', nextGroupRow);
+
+                  window.scrollBy(0, parseInt(groupHeight, 10));
+                }
+              } else {
+                self.rowObject.swap('after', nextRow);
+                self.rowObject.interval = null;
+                self.rowObject.indent(0);
+                window.scrollBy(0, parseInt(item.offsetHeight, 10));
+              }
+
+              handle.trigger('focus');
+            }
+            break;
+          }
+      }
+
+      if (self.rowObject && self.rowObject.changed === true) {
+        $(item).addClass('drag');
+        if (self.oldRowElement) {
+          $(self.oldRowElement).removeClass('drag-previous');
+        }
+        self.oldRowElement = item;
+        if (self.striping === true) {
+          self.restripeTable();
+        }
+        self.onDrag();
+      }
+
+      if (keyChange) {
+        return false;
+      }
+    });
+
+    handle.on('keypress', function (event) {
+
+      switch (event.keyCode) {
+        case 37:
+        case 38:
+        case 39:
+        case 40:
+          return false;
+      }
+    });
+  };
+
+  Drupal.tableDrag.prototype.dragStart = function (event, self, item) {
+    self.dragObject = {};
+    self.dragObject.initOffset = self.getPointerOffset(item, event);
+    self.dragObject.initPointerCoords = self.pointerCoords(event);
+    if (self.indentEnabled) {
+      self.dragObject.indentPointerPos = self.dragObject.initPointerCoords;
+    }
+
+    if (self.rowObject) {
+      $(self.rowObject.element).find('a.tabledrag-handle').trigger('blur');
+    }
+
+    self.rowObject = new self.row(item, 'pointer', self.indentEnabled, self.maxDepth, true);
+
+    self.table.topY = $(self.table).offset().top;
+    self.table.bottomY = self.table.topY + self.table.offsetHeight;
+
+    $(item).addClass('drag');
+
+    $('body').addClass('drag');
+    if (self.oldRowElement) {
+      $(self.oldRowElement).removeClass('drag-previous');
+    }
+  };
+
+  Drupal.tableDrag.prototype.dragRow = function (event, self) {
+    if (self.dragObject) {
+      self.currentPointerCoords = self.pointerCoords(event);
+      var y = self.currentPointerCoords.y - self.dragObject.initOffset.y;
+      var x = self.currentPointerCoords.x - self.dragObject.initOffset.x;
+
+      if (y !== self.oldY) {
+        self.rowObject.direction = y > self.oldY ? 'down' : 'up';
+
+        self.oldY = y;
+
+        var scrollAmount = self.checkScroll(self.currentPointerCoords.y);
+
+        clearInterval(self.scrollInterval);
+
+        if (scrollAmount > 0 && self.rowObject.direction === 'down' || scrollAmount < 0 && self.rowObject.direction === 'up') {
+          self.setScroll(scrollAmount);
+        }
+
+        var currentRow = self.findDropTargetRow(x, y);
+        if (currentRow) {
+          if (self.rowObject.direction === 'down') {
+            self.rowObject.swap('after', currentRow, self);
+          } else {
+            self.rowObject.swap('before', currentRow, self);
+          }
+          if (self.striping === true) {
+            self.restripeTable();
+          }
+        }
+      }
+
+      if (self.indentEnabled) {
+        var xDiff = self.currentPointerCoords.x - self.dragObject.indentPointerPos.x;
+
+        var indentDiff = Math.round(xDiff / self.indentAmount);
+
+        var indentChange = self.rowObject.indent(indentDiff);
+
+        self.dragObject.indentPointerPos.x += self.indentAmount * indentChange * self.rtl;
+        self.indentCount = Math.max(self.indentCount, self.rowObject.indents);
+      }
+
+      return false;
+    }
+  };
+
+  Drupal.tableDrag.prototype.dropRow = function (event, self) {
+    var droppedRow = void 0;
+    var $droppedRow = void 0;
+
+    if (self.rowObject !== null) {
+      droppedRow = self.rowObject.element;
+      $droppedRow = $(droppedRow);
+
+      if (self.rowObject.changed === true) {
+        self.updateFields(droppedRow);
+
+        Object.keys(self.tableSettings || {}).forEach(function (group) {
+          var rowSettings = self.rowSettings(group, droppedRow);
+          if (rowSettings.relationship === 'group') {
+            Object.keys(self.rowObject.children || {}).forEach(function (n) {
+              self.updateField(self.rowObject.children[n], group);
+            });
+          }
+        });
+
+        self.rowObject.markChanged();
+        if (self.changed === false) {
+          $(Drupal.theme('tableDragChangedWarning')).insertBefore(self.table).hide().fadeIn('slow');
+          self.changed = true;
+        }
+      }
+
+      if (self.indentEnabled) {
+        self.rowObject.removeIndentClasses();
+      }
+      if (self.oldRowElement) {
+        $(self.oldRowElement).removeClass('drag-previous');
+      }
+      $droppedRow.removeClass('drag').addClass('drag-previous');
+      self.oldRowElement = droppedRow;
+      self.onDrop();
+      self.rowObject = null;
+    }
+
+    if (self.dragObject !== null) {
+      self.dragObject = null;
+      $('body').removeClass('drag');
+      clearInterval(self.scrollInterval);
+    }
+  };
+
+  Drupal.tableDrag.prototype.pointerCoords = function (event) {
+    if (event.pageX || event.pageY) {
+      return { x: event.pageX, y: event.pageY };
+    }
+    return {
+      x: event.clientX + document.body.scrollLeft - document.body.clientLeft,
+      y: event.clientY + document.body.scrollTop - document.body.clientTop
+    };
+  };
+
+  Drupal.tableDrag.prototype.getPointerOffset = function (target, event) {
+    var docPos = $(target).offset();
+    var pointerPos = this.pointerCoords(event);
+    return { x: pointerPos.x - docPos.left, y: pointerPos.y - docPos.top };
+  };
+
+  Drupal.tableDrag.prototype.findDropTargetRow = function (x, y) {
+    var rows = $(this.table.tBodies[0].rows).not(':hidden');
+    for (var n = 0; n < rows.length; n++) {
+      var row = rows[n];
+      var $row = $(row);
+      var rowY = $row.offset().top;
+      var rowHeight = void 0;
+
+      if (row.offsetHeight === 0) {
+        rowHeight = parseInt(row.firstChild.offsetHeight, 10) / 2;
+      } else {
+          rowHeight = parseInt(row.offsetHeight, 10) / 2;
+        }
+
+      if (y > rowY - rowHeight && y < rowY + rowHeight) {
+        if (this.indentEnabled) {
+          for (n in this.rowObject.group) {
+            if (this.rowObject.group[n] === row) {
+              return null;
+            }
+          }
+        } else if (row === this.rowObject.element) {
+            return null;
+          }
+
+        if (!this.rowObject.isValidSwap(row)) {
+          return null;
+        }
+
+        while ($row.is(':hidden') && $row.prev('tr').is(':hidden')) {
+          $row = $row.prev('tr:first-of-type');
+          row = $row.get(0);
+        }
+        return row;
+      }
+    }
+    return null;
+  };
+
+  Drupal.tableDrag.prototype.updateFields = function (changedRow) {
+    var _this3 = this;
+
+    Object.keys(this.tableSettings || {}).forEach(function (group) {
+      _this3.updateField(changedRow, group);
+    });
+  };
+
+  Drupal.tableDrag.prototype.updateField = function (changedRow, group) {
+    var rowSettings = this.rowSettings(group, changedRow);
+    var $changedRow = $(changedRow);
+    var sourceRow = void 0;
+    var $previousRow = void 0;
+    var previousRow = void 0;
+    var useSibling = void 0;
+
+    if (rowSettings.relationship === 'self' || rowSettings.relationship === 'group') {
+      sourceRow = changedRow;
+    } else if (rowSettings.relationship === 'sibling') {
+        $previousRow = $changedRow.prev('tr:first-of-type');
+        previousRow = $previousRow.get(0);
+        var $nextRow = $changedRow.next('tr:first-of-type');
+        var nextRow = $nextRow.get(0);
+        sourceRow = changedRow;
+        if ($previousRow.is('.draggable') && $previousRow.find('.' + group).length) {
+          if (this.indentEnabled) {
+            if ($previousRow.find('.js-indentations').length === $changedRow.find('.js-indentations').length) {
+              sourceRow = previousRow;
+            }
+          } else {
+            sourceRow = previousRow;
+          }
+        } else if ($nextRow.is('.draggable') && $nextRow.find('.' + group).length) {
+          if (this.indentEnabled) {
+            if ($nextRow.find('.js-indentations').length === $changedRow.find('.js-indentations').length) {
+              sourceRow = nextRow;
+            }
+          } else {
+            sourceRow = nextRow;
+          }
+        }
+      } else if (rowSettings.relationship === 'parent') {
+          $previousRow = $changedRow.prev('tr');
+          previousRow = $previousRow;
+          while ($previousRow.length && $previousRow.find('.js-indentation').length >= this.rowObject.indents) {
+            $previousRow = $previousRow.prev('tr');
+            previousRow = $previousRow;
+          }
+
+          if ($previousRow.length) {
+            sourceRow = $previousRow.get(0);
+          } else {
+              sourceRow = $(this.table).find('tr.draggable:first-of-type').get(0);
+              if (sourceRow === this.rowObject.element) {
+                sourceRow = $(this.rowObject.group[this.rowObject.group.length - 1]).next('tr.draggable').get(0);
+              }
+              useSibling = true;
+            }
+        }
+
+    this.copyDragClasses(sourceRow, changedRow, group);
+    rowSettings = this.rowSettings(group, changedRow);
+
+    if (useSibling) {
+      rowSettings.relationship = 'sibling';
+      rowSettings.source = rowSettings.target;
+    }
+
+    var targetClass = '.' + rowSettings.target;
+    var targetElement = $changedRow.find(targetClass).get(0);
+
+    if (targetElement) {
+      var sourceClass = '.' + rowSettings.source;
+      var sourceElement = $(sourceClass, sourceRow).get(0);
+      switch (rowSettings.action) {
+        case 'depth':
+          targetElement.value = $(sourceElement).closest('tr').find('.js-indentation').length;
+          break;
+
+        case 'match':
+          targetElement.value = sourceElement.value;
+          break;
+
+        case 'order':
+          {
+            var siblings = this.rowObject.findSiblings(rowSettings);
+            if ($(targetElement).is('select')) {
+              var values = [];
+              $(targetElement).find('option').each(function () {
+                values.push(this.value);
+              });
+              var maxVal = values[values.length - 1];
+
+              $(siblings).find(targetClass).each(function () {
+                if (values.length > 0) {
+                  this.value = values.shift();
+                } else {
+                  this.value = maxVal;
+                }
+              });
+            } else {
+              var weight = parseInt($(siblings[0]).find(targetClass).val(), 10) || 0;
+              $(siblings).find(targetClass).each(function () {
+                this.value = weight;
+                weight++;
+              });
+            }
+            break;
+          }
+      }
+    }
+  };
+
+  Drupal.tableDrag.prototype.copyDragClasses = function (sourceRow, targetRow, group) {
+    var sourceElement = $(sourceRow).find('.' + group);
+    var targetElement = $(targetRow).find('.' + group);
+    if (sourceElement.length && targetElement.length) {
+      targetElement[0].className = sourceElement[0].className;
+    }
+  };
+
+  Drupal.tableDrag.prototype.checkScroll = function (cursorY) {
+    var de = document.documentElement;
+    var b = document.body;
+
+    var windowHeight = window.innerHeight || (de.clientHeight && de.clientWidth !== 0 ? de.clientHeight : b.offsetHeight);
+    this.windowHeight = windowHeight;
+    var scrollY = void 0;
+    if (document.all) {
+      scrollY = !de.scrollTop ? b.scrollTop : de.scrollTop;
+    } else {
+      scrollY = window.pageYOffset ? window.pageYOffset : window.scrollY;
+    }
+    this.scrollY = scrollY;
+    var trigger = this.scrollSettings.trigger;
+    var delta = 0;
+
+    if (cursorY - scrollY > windowHeight - trigger) {
+      delta = trigger / (windowHeight + scrollY - cursorY);
+      delta = delta > 0 && delta < trigger ? delta : trigger;
+      return delta * this.scrollSettings.amount;
+    } else if (cursorY - scrollY < trigger) {
+      delta = trigger / (cursorY - scrollY);
+      delta = delta > 0 && delta < trigger ? delta : trigger;
+      return -delta * this.scrollSettings.amount;
+    }
+  };
+
+  Drupal.tableDrag.prototype.setScroll = function (scrollAmount) {
+    var self = this;
+
+    this.scrollInterval = setInterval(function () {
+      self.checkScroll(self.currentPointerCoords.y);
+      var aboveTable = self.scrollY > self.table.topY;
+      var belowTable = self.scrollY + self.windowHeight < self.table.bottomY;
+      if (scrollAmount > 0 && belowTable || scrollAmount < 0 && aboveTable) {
+        window.scrollBy(0, scrollAmount);
+      }
+    }, this.scrollSettings.interval);
+  };
+
+  Drupal.tableDrag.prototype.restripeTable = function () {
+    $(this.table).find('> tbody > tr.draggable, > tr.draggable').filter(':visible').filter(':odd').removeClass('odd').addClass('even').end().filter(':even').removeClass('even').addClass('odd');
+  };
+
+  Drupal.tableDrag.prototype.onDrag = function () {
+    return null;
+  };
+
+  Drupal.tableDrag.prototype.onDrop = function () {
+    return null;
+  };
+
+  Drupal.tableDrag.prototype.row = function (tableRow, method, indentEnabled, maxDepth, addClasses) {
+    var $tableRow = $(tableRow);
+
+    this.element = tableRow;
+    this.method = method;
+    this.group = [tableRow];
+    this.groupDepth = $tableRow.find('.js-indentation').length;
+    this.changed = false;
+    this.table = $tableRow.closest('table')[0];
+    this.indentEnabled = indentEnabled;
+    this.maxDepth = maxDepth;
+
+    this.direction = '';
+    if (this.indentEnabled) {
+      this.indents = $tableRow.find('.js-indentation').length;
+      this.children = this.findChildren(addClasses);
+      this.group = $.merge(this.group, this.children);
+
+      for (var n = 0; n < this.group.length; n++) {
+        this.groupDepth = Math.max($(this.group[n]).find('.js-indentation').length, this.groupDepth);
+      }
+    }
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.findChildren = function (addClasses) {
+    var parentIndentation = this.indents;
+    var currentRow = $(this.element, this.table).next('tr.draggable');
+    var rows = [];
+    var child = 0;
+
+    function rowIndentation(indentNum, el) {
+      var self = $(el);
+      if (child === 1 && indentNum === parentIndentation) {
+        self.addClass('tree-child-first');
+      }
+      if (indentNum === parentIndentation) {
+        self.addClass('tree-child');
+      } else if (indentNum > parentIndentation) {
+        self.addClass('tree-child-horizontal');
+      }
+    }
+
+    while (currentRow.length) {
+      if (currentRow.find('.js-indentation').length > parentIndentation) {
+        child++;
+        rows.push(currentRow[0]);
+        if (addClasses) {
+          currentRow.find('.js-indentation').each(rowIndentation);
+        }
+      } else {
+        break;
+      }
+      currentRow = currentRow.next('tr.draggable');
+    }
+    if (addClasses && rows.length) {
+      $(rows[rows.length - 1]).find('.js-indentation:nth-child(' + (parentIndentation + 1) + ')').addClass('tree-child-last');
+    }
+    return rows;
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.isValidSwap = function (row) {
+    var $row = $(row);
+    if (this.indentEnabled) {
+      var prevRow = void 0;
+      var nextRow = void 0;
+      if (this.direction === 'down') {
+        prevRow = row;
+        nextRow = $row.next('tr').get(0);
+      } else {
+        prevRow = $row.prev('tr').get(0);
+        nextRow = row;
+      }
+      this.interval = this.validIndentInterval(prevRow, nextRow);
+
+      if (this.interval.min > this.interval.max) {
+        return false;
+      }
+    }
+
+    if (this.table.tBodies[0].rows[0] === row && $row.is(':not(.draggable)')) {
+      return false;
+    }
+
+    return true;
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.swap = function (position, row) {
+    this.group.forEach(function (row) {
+      Drupal.detachBehaviors(row, drupalSettings, 'move');
+    });
+    $(row)[position](this.group);
+
+    this.group.forEach(function (row) {
+      Drupal.attachBehaviors(row, drupalSettings);
+    });
+    this.changed = true;
+    this.onSwap(row);
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.validIndentInterval = function (prevRow, nextRow) {
+    var $prevRow = $(prevRow);
+    var maxIndent = void 0;
+
+    var minIndent = nextRow ? $(nextRow).find('.js-indentation').length : 0;
+
+    if (!prevRow || $prevRow.is(':not(.draggable)') || $(this.element).is('.tabledrag-root')) {
+      maxIndent = 0;
+    } else {
+      maxIndent = $prevRow.find('.js-indentation').length + ($prevRow.is('.tabledrag-leaf') ? 0 : 1);
+
+      if (this.maxDepth) {
+        maxIndent = Math.min(maxIndent, this.maxDepth - (this.groupDepth - this.indents));
+      }
+    }
+
+    return { min: minIndent, max: maxIndent };
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.indent = function (indentDiff) {
+    var $group = $(this.group);
+
+    if (!this.interval) {
+      var prevRow = $(this.element).prev('tr').get(0);
+      var nextRow = $group.eq(-1).next('tr').get(0);
+      this.interval = this.validIndentInterval(prevRow, nextRow);
+    }
+
+    var indent = this.indents + indentDiff;
+    indent = Math.max(indent, this.interval.min);
+    indent = Math.min(indent, this.interval.max);
+    indentDiff = indent - this.indents;
+
+    for (var n = 1; n <= Math.abs(indentDiff); n++) {
+      if (indentDiff < 0) {
+        $group.find('.js-indentation:first-of-type').remove();
+        this.indents--;
+      } else {
+        $group.find('td:first-of-type').prepend(Drupal.theme('tableDragIndentation'));
+        this.indents++;
+      }
+    }
+    if (indentDiff) {
+      this.changed = true;
+      this.groupDepth += indentDiff;
+      this.onIndent();
+    }
+
+    return indentDiff;
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.findSiblings = function (rowSettings) {
+    var siblings = [];
+    var directions = ['prev', 'next'];
+    var rowIndentation = this.indents;
+    var checkRowIndentation = void 0;
+    for (var d = 0; d < directions.length; d++) {
+      var checkRow = $(this.element)[directions[d]]();
+      while (checkRow.length) {
+        if (checkRow.find('.' + rowSettings.target)) {
+          if (this.indentEnabled) {
+            checkRowIndentation = checkRow.find('.js-indentation').length;
+          }
+
+          if (!this.indentEnabled || checkRowIndentation === rowIndentation) {
+            siblings.push(checkRow[0]);
+          } else if (checkRowIndentation < rowIndentation) {
+            break;
+          }
+        } else {
+          break;
+        }
+        checkRow = checkRow[directions[d]]();
+      }
+
+      if (directions[d] === 'prev') {
+        siblings.reverse();
+        siblings.push(this.element);
+      }
+    }
+    return siblings;
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.removeIndentClasses = function () {
+    var _this4 = this;
+
+    Object.keys(this.children || {}).forEach(function (n) {
+      $(_this4.children[n]).find('.js-indentation').removeClass('tree-child').removeClass('tree-child-first').removeClass('tree-child-last').removeClass('tree-child-horizontal');
+    });
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.markChanged = function () {
+    var marker = Drupal.theme('tableDragChangedMarker');
+    var cell = $(this.element).find('td:first-of-type');
+    if (cell.find('abbr.tabledrag-changed').length === 0) {
+      cell.append(marker);
+    }
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.onIndent = function () {
+    return null;
+  };
+
+  Drupal.tableDrag.prototype.row.prototype.onSwap = function (swappedRow) {
+    return null;
+  };
+
+  $.extend(Drupal.theme, {
+    tableDragChangedMarker: function tableDragChangedMarker() {
+      return '<abbr class="warning tabledrag-changed" title="' + Drupal.t('Changed') + '">*</abbr>';
+    },
+    tableDragIndentation: function tableDragIndentation() {
+      return '<div class="js-indentation indentation">&nbsp;</div>';
+    },
+    tableDragChangedWarning: function tableDragChangedWarning() {
+      return '<div class="tabledrag-changed-warning messages messages--warning" role="alert">' + Drupal.theme('tableDragChangedMarker') + ' ' + Drupal.t('You have unsaved changes.') + '</div>';
+    }
+  });
+})(jQuery, Drupal, drupalSettings);;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
 (function ($, Drupal) {
   Drupal.theme.progressBar = function (id) {
     return '<div id="' + id + '" class="progress" aria-live="polite">' + '<div class="progress__label">&nbsp;</div>' + '<div class="progress__track"><div class="progress__bar"></div></div>' + '<div class="progress__percentage"></div>' + '<div class="progress__description">&nbsp;</div>' + '</div>';
@@ -1394,6 +2357,466 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 * @preserve
 **/
 
+(function ($, Drupal, drupalSettings) {
+  Drupal.behaviors.fieldUIFieldStorageAddForm = {
+    attach: function attach(context) {
+      var $form = $(context).find('[data-drupal-selector="field-ui-field-storage-add-form"]').once('field_ui_add');
+      if ($form.length) {
+        $form.find('.js-form-item-label label,' + '.js-form-item-field-name label,' + '.js-form-item-existing-storage-label label').addClass('js-form-required form-required');
+
+        var $newFieldType = $form.find('select[name="new_storage_type"]');
+        var $existingStorageName = $form.find('select[name="existing_storage_name"]');
+        var $existingStorageLabel = $form.find('input[name="existing_storage_label"]');
+
+        $newFieldType.on('change', function () {
+          if ($(this).val() !== '') {
+            $existingStorageName.val('').trigger('change');
+          }
+        });
+
+        $existingStorageName.on('change', function () {
+          var value = $(this).val();
+          if (value !== '') {
+            $newFieldType.val('').trigger('change');
+
+            if (typeof drupalSettings.existingFieldLabels[value] !== 'undefined') {
+              $existingStorageLabel.val(drupalSettings.existingFieldLabels[value]);
+            }
+          }
+        });
+      }
+    }
+  };
+
+  Drupal.behaviors.fieldUIDisplayOverview = {
+    attach: function attach(context, settings) {
+      $(context).find('table#field-display-overview').once('field-display-overview').each(function () {
+        Drupal.fieldUIOverview.attach(this, settings.fieldUIRowsData, Drupal.fieldUIDisplayOverview);
+      });
+    }
+  };
+
+  Drupal.fieldUIOverview = {
+    attach: function attach(table, rowsData, rowHandlers) {
+      var tableDrag = Drupal.tableDrag[table.id];
+
+      tableDrag.onDrop = this.onDrop;
+      tableDrag.row.prototype.onSwap = this.onSwap;
+
+      $(table).find('tr.draggable').each(function () {
+        var row = this;
+        if (row.id in rowsData) {
+          var data = rowsData[row.id];
+          data.tableDrag = tableDrag;
+
+          var rowHandler = new rowHandlers[data.rowHandler](row, data);
+          $(row).data('fieldUIRowHandler', rowHandler);
+        }
+      });
+    },
+    onChange: function onChange() {
+      var $trigger = $(this);
+      var $row = $trigger.closest('tr');
+      var rowHandler = $row.data('fieldUIRowHandler');
+
+      var refreshRows = {};
+      refreshRows[rowHandler.name] = $trigger.get(0);
+
+      var region = rowHandler.getRegion();
+      if (region !== rowHandler.region) {
+        $row.find('select.js-field-parent').val('');
+
+        $.extend(refreshRows, rowHandler.regionChange(region));
+
+        rowHandler.region = region;
+      }
+
+      Drupal.fieldUIOverview.AJAXRefreshRows(refreshRows);
+    },
+    onDrop: function onDrop() {
+      var dragObject = this;
+      var row = dragObject.rowObject.element;
+      var $row = $(row);
+      var rowHandler = $row.data('fieldUIRowHandler');
+      if (typeof rowHandler !== 'undefined') {
+        var regionRow = $row.prevAll('tr.region-message').get(0);
+        var region = regionRow.className.replace(/([^ ]+[ ]+)*region-([^ ]+)-message([ ]+[^ ]+)*/, '$2');
+
+        if (region !== rowHandler.region) {
+          var refreshRows = rowHandler.regionChange(region);
+
+          rowHandler.region = region;
+
+          Drupal.fieldUIOverview.AJAXRefreshRows(refreshRows);
+        }
+      }
+    },
+    onSwap: function onSwap(draggedRow) {
+      var rowObject = this;
+      $(rowObject.table).find('tr.region-message').each(function () {
+        var $this = $(this);
+
+        if ($this.prev('tr').get(0) === rowObject.group[rowObject.group.length - 1]) {
+          if (rowObject.method !== 'keyboard' || rowObject.direction === 'down') {
+            rowObject.swap('after', this);
+          }
+        }
+
+        if ($this.next('tr').is(':not(.draggable)') || $this.next('tr').length === 0) {
+          $this.removeClass('region-populated').addClass('region-empty');
+        } else if ($this.is('.region-empty')) {
+            $this.removeClass('region-empty').addClass('region-populated');
+          }
+      });
+    },
+    AJAXRefreshRows: function AJAXRefreshRows(rows) {
+      var rowNames = [];
+      var ajaxElements = [];
+      Object.keys(rows || {}).forEach(function (rowName) {
+        rowNames.push(rowName);
+        ajaxElements.push(rows[rowName]);
+      });
+
+      if (rowNames.length) {
+        $(ajaxElements).after('<div class="ajax-progress ajax-progress-throbber"><div class="throbber">&nbsp;</div></div>');
+
+        $('input[name=refresh_rows]').val(rowNames.join(' '));
+        $('input[data-drupal-selector="edit-refresh"]').trigger('mousedown');
+
+        $(ajaxElements).prop('disabled', true);
+      }
+    }
+  };
+
+  Drupal.fieldUIDisplayOverview = {};
+
+  Drupal.fieldUIDisplayOverview.field = function (row, data) {
+    this.row = row;
+    this.name = data.name;
+    this.region = data.region;
+    this.tableDrag = data.tableDrag;
+    this.defaultPlugin = data.defaultPlugin;
+
+    this.$pluginSelect = $(row).find('.field-plugin-type');
+    this.$pluginSelect.on('change', Drupal.fieldUIOverview.onChange);
+
+    this.$regionSelect = $(row).find('select.field-region');
+    this.$regionSelect.on('change', Drupal.fieldUIOverview.onChange);
+
+    return this;
+  };
+
+  Drupal.fieldUIDisplayOverview.field.prototype = {
+    getRegion: function getRegion() {
+      return this.$regionSelect.val();
+    },
+    regionChange: function regionChange(region) {
+      region = region.replace(/-/g, '_');
+
+      this.$regionSelect.val(region);
+
+      var value = typeof this.defaultPlugin !== 'undefined' ? this.defaultPlugin : this.$pluginSelect.find('option').val();
+
+      if (typeof value !== 'undefined') {
+        this.$pluginSelect.val(value);
+      }
+
+      var refreshRows = {};
+      refreshRows[this.name] = this.$pluginSelect.get(0);
+
+      return refreshRows;
+    }
+  };
+})(jQuery, Drupal, drupalSettings);;
+(function ($) {
+
+  'use strict';
+  Drupal.behaviors.fieldUIFieldsOverview = {
+    attach: function (context, settings) {
+      $('table#field-overview', context).once('field-field-overview', function () {
+        Drupal.fieldUIOverview.attach(this, settings.fieldUIRowsData, Drupal.fieldUIFieldOverview);
+      });
+    }
+  };
+
+  /**
+   * Row handlers for the 'Manage fields' screen.
+   */
+  Drupal.fieldUIFieldOverview = Drupal.fieldUIFieldOverview || {};
+
+  Drupal.fieldUIFieldOverview.group = function (row, data) {
+    this.row = row;
+    this.name = data.name;
+    this.region = data.region;
+    this.tableDrag = data.tableDrag;
+
+    // Attach change listener to the 'group format' select.
+    this.$formatSelect = $('select.field-group-type', row);
+    this.$formatSelect.change(Drupal.fieldUIOverview.onChange);
+
+    return this;
+  };
+
+  Drupal.fieldUIFieldOverview.group.prototype = {
+    getRegion: function () {
+      return 'main';
+    },
+
+    regionChange: function (region, recurse) {
+      return {};
+    },
+
+    regionChangeFields: function (region, element, refreshRows) {
+
+      // Create a new tabledrag rowObject, that will compute the group's child
+      // rows for us.
+      var tableDrag = element.tableDrag;
+      var rowObject = new tableDrag.row(element.row, 'mouse', true);
+      // Skip the main row, we handled it above.
+      rowObject.group.shift();
+
+      // Let child rows handlers deal with the region change - without recursing
+      // on nested group rows, we are handling them all here.
+      $.each(rowObject.group, function () {
+        var childRow = this;
+        var childRowHandler = $(childRow).data('fieldUIRowHandler');
+        $.extend(refreshRows, childRowHandler.regionChange(region, false));
+      });
+    }
+  };
+
+
+  /**
+   * Row handlers for the 'Manage display' screen.
+   */
+  Drupal.fieldUIDisplayOverview = Drupal.fieldUIDisplayOverview || {};
+
+  Drupal.fieldUIDisplayOverview.group = function (row, data) {
+    this.row = row;
+    this.name = data.name;
+    this.region = data.region;
+    this.tableDrag = data.tableDrag;
+
+    // Attach change listener to the 'group format' select.
+    this.$formatSelect = $('select.field-group-type', row);
+    this.$formatSelect.change(Drupal.fieldUIOverview.onChange);
+
+    return this;
+  };
+
+  Drupal.fieldUIDisplayOverview.group.prototype = {
+    getRegion: function () {
+      return (this.$formatSelect.val() === 'hidden') ? 'hidden' : 'content';
+    },
+
+    regionChange: function (region, recurse) {
+
+      // Default recurse to true.
+      recurse = (typeof recurse === 'undefined') || recurse;
+
+      // When triggered by a row drag, the 'format' select needs to be adjusted to
+      // the new region.
+      var currentValue = this.$formatSelect.val();
+      var value;
+      switch (region) {
+        case 'visible':
+          if (currentValue === 'hidden') {
+            // Restore the group format back to 'fieldset'.
+            value = 'fieldset';
+          }
+          break;
+
+        default:
+          value = 'hidden';
+          break;
+      }
+      if (typeof value !== 'undefined') {
+        this.$formatSelect.val(value);
+      }
+
+      var refreshRows = {};
+      refreshRows[this.name] = this.$formatSelect.get(0);
+
+      if (recurse) {
+        this.regionChangeFields(region, this, refreshRows);
+      }
+
+      return refreshRows;
+    },
+
+    regionChangeFields: function (region, element, refreshRows) {
+
+      // Create a new tabledrag rowObject, that will compute the group's child
+      // rows for us.
+      var tableDrag = element.tableDrag;
+      var rowObject = new tableDrag.row(element.row, 'mouse', true);
+      // Skip the main row, we handled it above.
+      rowObject.group.shift();
+
+      // Let child rows handlers deal with the region change - without recursing
+      // on nested group rows, we are handling them all here.
+      $.each(rowObject.group, function () {
+        var childRow = this;
+        var childRowHandler = $(childRow).data('fieldUIRowHandler');
+        $.extend(refreshRows, childRowHandler.regionChange(region, false));
+      });
+
+    }
+
+  };
+
+})(jQuery);
+;
+/**
+ * @file
+ * Javascript for the Panelizer defaults page.
+ */
+(function ($) {
+  Drupal.behaviors.panelizer_default_form = {
+    attach: function (context, settings) {
+      var $panelizer_checkbox = $(':input[name="panelizer[enable]"]');
+
+      function update_form() {
+        var $core_form = $('#field-display-overview-wrapper');
+        if ($panelizer_checkbox.is(':checked')) {
+          $core_form.fadeOut();
+        }
+        else {
+          $core_form.fadeIn();
+        }
+      }
+
+      $panelizer_checkbox.once('panelizer-default-form').click(update_form);
+      update_form();
+    }
+  };
+})(jQuery);
+;
+/*! jquery.cookie v1.4.1 | MIT */
+!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?a(require("jquery")):a(jQuery)}(function(a){function b(a){return h.raw?a:encodeURIComponent(a)}function c(a){return h.raw?a:decodeURIComponent(a)}function d(a){return b(h.json?JSON.stringify(a):String(a))}function e(a){0===a.indexOf('"')&&(a=a.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return a=decodeURIComponent(a.replace(g," ")),h.json?JSON.parse(a):a}catch(b){}}function f(b,c){var d=h.raw?b:e(b);return a.isFunction(c)?c(d):d}var g=/\+/g,h=a.cookie=function(e,g,i){if(void 0!==g&&!a.isFunction(g)){if(i=a.extend({},h.defaults,i),"number"==typeof i.expires){var j=i.expires,k=i.expires=new Date;k.setTime(+k+864e5*j)}return document.cookie=[b(e),"=",d(g),i.expires?"; expires="+i.expires.toUTCString():"",i.path?"; path="+i.path:"",i.domain?"; domain="+i.domain:"",i.secure?"; secure":""].join("")}for(var l=e?void 0:{},m=document.cookie?document.cookie.split("; "):[],n=0,o=m.length;o>n;n++){var p=m[n].split("="),q=c(p.shift()),r=p.join("=");if(e&&e===q){l=f(r,g);break}e||void 0===(r=f(r))||(l[q]=r)}return l};h.defaults={},a.removeCookie=function(b,c){return void 0===a.cookie(b)?!1:(a.cookie(b,"",a.extend({},c,{expires:-1})),!a.cookie(b))}});;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
+(function ($, Drupal, window) {
+  Drupal.behaviors.tableResponsive = {
+    attach: function attach(context, settings) {
+      var $tables = $(context).find('table.responsive-enabled').once('tableresponsive');
+      if ($tables.length) {
+        var il = $tables.length;
+        for (var i = 0; i < il; i++) {
+          TableResponsive.tables.push(new TableResponsive($tables[i]));
+        }
+      }
+    }
+  };
+
+  function TableResponsive(table) {
+    this.table = table;
+    this.$table = $(table);
+    this.showText = Drupal.t('Show all columns');
+    this.hideText = Drupal.t('Hide lower priority columns');
+
+    this.$headers = this.$table.find('th');
+
+    this.$link = $('<button type="button" class="link tableresponsive-toggle"></button>').attr('title', Drupal.t('Show table cells that were hidden to make the table fit within a small screen.')).on('click', $.proxy(this, 'eventhandlerToggleColumns'));
+
+    this.$table.before($('<div class="tableresponsive-toggle-columns"></div>').append(this.$link));
+
+    $(window).on('resize.tableresponsive', $.proxy(this, 'eventhandlerEvaluateColumnVisibility')).trigger('resize.tableresponsive');
+  }
+
+  $.extend(TableResponsive, {
+    tables: []
+  });
+
+  $.extend(TableResponsive.prototype, {
+    eventhandlerEvaluateColumnVisibility: function eventhandlerEvaluateColumnVisibility(e) {
+      var pegged = parseInt(this.$link.data('pegged'), 10);
+      var hiddenLength = this.$headers.filter('.priority-medium:hidden, .priority-low:hidden').length;
+
+      if (hiddenLength > 0) {
+        this.$link.show().text(this.showText);
+      }
+
+      if (!pegged && hiddenLength === 0) {
+        this.$link.hide().text(this.hideText);
+      }
+    },
+    eventhandlerToggleColumns: function eventhandlerToggleColumns(e) {
+      e.preventDefault();
+      var self = this;
+      var $hiddenHeaders = this.$headers.filter('.priority-medium:hidden, .priority-low:hidden');
+      this.$revealedCells = this.$revealedCells || $();
+
+      if ($hiddenHeaders.length > 0) {
+        $hiddenHeaders.each(function (index, element) {
+          var $header = $(this);
+          var position = $header.prevAll('th').length;
+          self.$table.find('tbody tr').each(function () {
+            var $cells = $(this).find('td').eq(position);
+            $cells.show();
+
+            self.$revealedCells = $().add(self.$revealedCells).add($cells);
+          });
+          $header.show();
+
+          self.$revealedCells = $().add(self.$revealedCells).add($header);
+        });
+        this.$link.text(this.hideText).data('pegged', 1);
+      } else {
+          this.$revealedCells.hide();
+
+          this.$revealedCells.each(function (index, element) {
+            var $cell = $(this);
+            var properties = $cell.attr('style').split(';');
+            var newProps = [];
+
+            var match = /^display\s*:\s*none$/;
+            for (var i = 0; i < properties.length; i++) {
+              var prop = properties[i];
+              prop.trim();
+
+              var isDisplayNone = match.exec(prop);
+              if (isDisplayNone) {
+                continue;
+              }
+              newProps.push(prop);
+            }
+
+            $cell.attr('style', newProps.join(';'));
+          });
+          this.$link.text(this.showText).data('pegged', 0);
+
+          $(window).trigger('resize.tableresponsive');
+        }
+    }
+  });
+
+  Drupal.TableResponsive = TableResponsive;
+})(jQuery, Drupal, window);;
+/*!
+ * jQuery Form Plugin
+ * version: 3.51.0-2014.06.20
+ * Requires jQuery v1.5 or later
+ * Copyright (c) 2014 M. Alsup
+ * Examples and documentation at: http://malsup.com/jquery/form/
+ * Project repository: https://github.com/malsup/form
+ * Dual licensed under the MIT and GPL licenses.
+ * https://github.com/malsup/form#copyright-and-license
+ */
+!function(e){"use strict";"function"==typeof define&&define.amd?define(["jquery"],e):e("undefined"!=typeof jQuery?jQuery:window.Zepto)}(function(e){"use strict";function t(t){var r=t.data;t.isDefaultPrevented()||(t.preventDefault(),e(t.target).ajaxSubmit(r))}function r(t){var r=t.target,a=e(r);if(!a.is("[type=submit],[type=image]")){var n=a.closest("[type=submit]");if(0===n.length)return;r=n[0]}var i=this;if(i.clk=r,"image"==r.type)if(void 0!==t.offsetX)i.clk_x=t.offsetX,i.clk_y=t.offsetY;else if("function"==typeof e.fn.offset){var o=a.offset();i.clk_x=t.pageX-o.left,i.clk_y=t.pageY-o.top}else i.clk_x=t.pageX-r.offsetLeft,i.clk_y=t.pageY-r.offsetTop;setTimeout(function(){i.clk=i.clk_x=i.clk_y=null},100)}function a(){if(e.fn.ajaxSubmit.debug){var t="[jquery.form] "+Array.prototype.join.call(arguments,"");window.console&&window.console.log?window.console.log(t):window.opera&&window.opera.postError&&window.opera.postError(t)}}var n={};n.fileapi=void 0!==e("<input type='file'/>").get(0).files,n.formdata=void 0!==window.FormData;var i=!!e.fn.prop;e.fn.attr2=function(){if(!i)return this.attr.apply(this,arguments);var e=this.prop.apply(this,arguments);return e&&e.jquery||"string"==typeof e?e:this.attr.apply(this,arguments)},e.fn.ajaxSubmit=function(t){function r(r){var a,n,i=e.param(r,t.traditional).split("&"),o=i.length,s=[];for(a=0;o>a;a++)i[a]=i[a].replace(/\+/g," "),n=i[a].split("="),s.push([decodeURIComponent(n[0]),decodeURIComponent(n[1])]);return s}function o(a){for(var n=new FormData,i=0;i<a.length;i++)n.append(a[i].name,a[i].value);if(t.extraData){var o=r(t.extraData);for(i=0;i<o.length;i++)o[i]&&n.append(o[i][0],o[i][1])}t.data=null;var s=e.extend(!0,{},e.ajaxSettings,t,{contentType:!1,processData:!1,cache:!1,type:u||"POST"});t.uploadProgress&&(s.xhr=function(){var r=e.ajaxSettings.xhr();return r.upload&&r.upload.addEventListener("progress",function(e){var r=0,a=e.loaded||e.position,n=e.total;e.lengthComputable&&(r=Math.ceil(a/n*100)),t.uploadProgress(e,a,n,r)},!1),r}),s.data=null;var c=s.beforeSend;return s.beforeSend=function(e,r){r.data=t.formData?t.formData:n,c&&c.call(this,e,r)},e.ajax(s)}function s(r){function n(e){var t=null;try{e.contentWindow&&(t=e.contentWindow.document)}catch(r){a("cannot get iframe.contentWindow document: "+r)}if(t)return t;try{t=e.contentDocument?e.contentDocument:e.document}catch(r){a("cannot get iframe.contentDocument: "+r),t=e.document}return t}function o(){function t(){try{var e=n(g).readyState;a("state = "+e),e&&"uninitialized"==e.toLowerCase()&&setTimeout(t,50)}catch(r){a("Server abort: ",r," (",r.name,")"),s(k),j&&clearTimeout(j),j=void 0}}var r=f.attr2("target"),i=f.attr2("action"),o="multipart/form-data",c=f.attr("enctype")||f.attr("encoding")||o;w.setAttribute("target",p),(!u||/post/i.test(u))&&w.setAttribute("method","POST"),i!=m.url&&w.setAttribute("action",m.url),m.skipEncodingOverride||u&&!/post/i.test(u)||f.attr({encoding:"multipart/form-data",enctype:"multipart/form-data"}),m.timeout&&(j=setTimeout(function(){T=!0,s(D)},m.timeout));var l=[];try{if(m.extraData)for(var d in m.extraData)m.extraData.hasOwnProperty(d)&&l.push(e.isPlainObject(m.extraData[d])&&m.extraData[d].hasOwnProperty("name")&&m.extraData[d].hasOwnProperty("value")?e('<input type="hidden" name="'+m.extraData[d].name+'">').val(m.extraData[d].value).appendTo(w)[0]:e('<input type="hidden" name="'+d+'">').val(m.extraData[d]).appendTo(w)[0]);m.iframeTarget||v.appendTo("body"),g.attachEvent?g.attachEvent("onload",s):g.addEventListener("load",s,!1),setTimeout(t,15);try{w.submit()}catch(h){var x=document.createElement("form").submit;x.apply(w)}}finally{w.setAttribute("action",i),w.setAttribute("enctype",c),r?w.setAttribute("target",r):f.removeAttr("target"),e(l).remove()}}function s(t){if(!x.aborted&&!F){if(M=n(g),M||(a("cannot access response document"),t=k),t===D&&x)return x.abort("timeout"),void S.reject(x,"timeout");if(t==k&&x)return x.abort("server abort"),void S.reject(x,"error","server abort");if(M&&M.location.href!=m.iframeSrc||T){g.detachEvent?g.detachEvent("onload",s):g.removeEventListener("load",s,!1);var r,i="success";try{if(T)throw"timeout";var o="xml"==m.dataType||M.XMLDocument||e.isXMLDoc(M);if(a("isXml="+o),!o&&window.opera&&(null===M.body||!M.body.innerHTML)&&--O)return a("requeing onLoad callback, DOM not available"),void setTimeout(s,250);var u=M.body?M.body:M.documentElement;x.responseText=u?u.innerHTML:null,x.responseXML=M.XMLDocument?M.XMLDocument:M,o&&(m.dataType="xml"),x.getResponseHeader=function(e){var t={"content-type":m.dataType};return t[e.toLowerCase()]},u&&(x.status=Number(u.getAttribute("status"))||x.status,x.statusText=u.getAttribute("statusText")||x.statusText);var c=(m.dataType||"").toLowerCase(),l=/(json|script|text)/.test(c);if(l||m.textarea){var f=M.getElementsByTagName("textarea")[0];if(f)x.responseText=f.value,x.status=Number(f.getAttribute("status"))||x.status,x.statusText=f.getAttribute("statusText")||x.statusText;else if(l){var p=M.getElementsByTagName("pre")[0],h=M.getElementsByTagName("body")[0];p?x.responseText=p.textContent?p.textContent:p.innerText:h&&(x.responseText=h.textContent?h.textContent:h.innerText)}}else"xml"==c&&!x.responseXML&&x.responseText&&(x.responseXML=X(x.responseText));try{E=_(x,c,m)}catch(y){i="parsererror",x.error=r=y||i}}catch(y){a("error caught: ",y),i="error",x.error=r=y||i}x.aborted&&(a("upload aborted"),i=null),x.status&&(i=x.status>=200&&x.status<300||304===x.status?"success":"error"),"success"===i?(m.success&&m.success.call(m.context,E,"success",x),S.resolve(x.responseText,"success",x),d&&e.event.trigger("ajaxSuccess",[x,m])):i&&(void 0===r&&(r=x.statusText),m.error&&m.error.call(m.context,x,i,r),S.reject(x,"error",r),d&&e.event.trigger("ajaxError",[x,m,r])),d&&e.event.trigger("ajaxComplete",[x,m]),d&&!--e.active&&e.event.trigger("ajaxStop"),m.complete&&m.complete.call(m.context,x,i),F=!0,m.timeout&&clearTimeout(j),setTimeout(function(){m.iframeTarget?v.attr("src",m.iframeSrc):v.remove(),x.responseXML=null},100)}}}var c,l,m,d,p,v,g,x,y,b,T,j,w=f[0],S=e.Deferred();if(S.abort=function(e){x.abort(e)},r)for(l=0;l<h.length;l++)c=e(h[l]),i?c.prop("disabled",!1):c.removeAttr("disabled");if(m=e.extend(!0,{},e.ajaxSettings,t),m.context=m.context||m,p="jqFormIO"+(new Date).getTime(),m.iframeTarget?(v=e(m.iframeTarget),b=v.attr2("name"),b?p=b:v.attr2("name",p)):(v=e('<iframe name="'+p+'" src="'+m.iframeSrc+'" />'),v.css({position:"absolute",top:"-1000px",left:"-1000px"})),g=v[0],x={aborted:0,responseText:null,responseXML:null,status:0,statusText:"n/a",getAllResponseHeaders:function(){},getResponseHeader:function(){},setRequestHeader:function(){},abort:function(t){var r="timeout"===t?"timeout":"aborted";a("aborting upload... "+r),this.aborted=1;try{g.contentWindow.document.execCommand&&g.contentWindow.document.execCommand("Stop")}catch(n){}v.attr("src",m.iframeSrc),x.error=r,m.error&&m.error.call(m.context,x,r,t),d&&e.event.trigger("ajaxError",[x,m,r]),m.complete&&m.complete.call(m.context,x,r)}},d=m.global,d&&0===e.active++&&e.event.trigger("ajaxStart"),d&&e.event.trigger("ajaxSend",[x,m]),m.beforeSend&&m.beforeSend.call(m.context,x,m)===!1)return m.global&&e.active--,S.reject(),S;if(x.aborted)return S.reject(),S;y=w.clk,y&&(b=y.name,b&&!y.disabled&&(m.extraData=m.extraData||{},m.extraData[b]=y.value,"image"==y.type&&(m.extraData[b+".x"]=w.clk_x,m.extraData[b+".y"]=w.clk_y)));var D=1,k=2,A=e("meta[name=csrf-token]").attr("content"),L=e("meta[name=csrf-param]").attr("content");L&&A&&(m.extraData=m.extraData||{},m.extraData[L]=A),m.forceSync?o():setTimeout(o,10);var E,M,F,O=50,X=e.parseXML||function(e,t){return window.ActiveXObject?(t=new ActiveXObject("Microsoft.XMLDOM"),t.async="false",t.loadXML(e)):t=(new DOMParser).parseFromString(e,"text/xml"),t&&t.documentElement&&"parsererror"!=t.documentElement.nodeName?t:null},C=e.parseJSON||function(e){return window.eval("("+e+")")},_=function(t,r,a){var n=t.getResponseHeader("content-type")||"",i="xml"===r||!r&&n.indexOf("xml")>=0,o=i?t.responseXML:t.responseText;return i&&"parsererror"===o.documentElement.nodeName&&e.error&&e.error("parsererror"),a&&a.dataFilter&&(o=a.dataFilter(o,r)),"string"==typeof o&&("json"===r||!r&&n.indexOf("json")>=0?o=C(o):("script"===r||!r&&n.indexOf("javascript")>=0)&&e.globalEval(o)),o};return S}if(!this.length)return a("ajaxSubmit: skipping submit process - no element selected"),this;var u,c,l,f=this;"function"==typeof t?t={success:t}:void 0===t&&(t={}),u=t.type||this.attr2("method"),c=t.url||this.attr2("action"),l="string"==typeof c?e.trim(c):"",l=l||window.location.href||"",l&&(l=(l.match(/^([^#]+)/)||[])[1]),t=e.extend(!0,{url:l,success:e.ajaxSettings.success,type:u||e.ajaxSettings.type,iframeSrc:/^https/i.test(window.location.href||"")?"javascript:false":"about:blank"},t);var m={};if(this.trigger("form-pre-serialize",[this,t,m]),m.veto)return a("ajaxSubmit: submit vetoed via form-pre-serialize trigger"),this;if(t.beforeSerialize&&t.beforeSerialize(this,t)===!1)return a("ajaxSubmit: submit aborted via beforeSerialize callback"),this;var d=t.traditional;void 0===d&&(d=e.ajaxSettings.traditional);var p,h=[],v=this.formToArray(t.semantic,h);if(t.data&&(t.extraData=t.data,p=e.param(t.data,d)),t.beforeSubmit&&t.beforeSubmit(v,this,t)===!1)return a("ajaxSubmit: submit aborted via beforeSubmit callback"),this;if(this.trigger("form-submit-validate",[v,this,t,m]),m.veto)return a("ajaxSubmit: submit vetoed via form-submit-validate trigger"),this;var g=e.param(v,d);p&&(g=g?g+"&"+p:p),"GET"==t.type.toUpperCase()?(t.url+=(t.url.indexOf("?")>=0?"&":"?")+g,t.data=null):t.data=g;var x=[];if(t.resetForm&&x.push(function(){f.resetForm()}),t.clearForm&&x.push(function(){f.clearForm(t.includeHidden)}),!t.dataType&&t.target){var y=t.success||function(){};x.push(function(r){var a=t.replaceTarget?"replaceWith":"html";e(t.target)[a](r).each(y,arguments)})}else t.success&&x.push(t.success);if(t.success=function(e,r,a){for(var n=t.context||this,i=0,o=x.length;o>i;i++)x[i].apply(n,[e,r,a||f,f])},t.error){var b=t.error;t.error=function(e,r,a){var n=t.context||this;b.apply(n,[e,r,a,f])}}if(t.complete){var T=t.complete;t.complete=function(e,r){var a=t.context||this;T.apply(a,[e,r,f])}}var j=e("input[type=file]:enabled",this).filter(function(){return""!==e(this).val()}),w=j.length>0,S="multipart/form-data",D=f.attr("enctype")==S||f.attr("encoding")==S,k=n.fileapi&&n.formdata;a("fileAPI :"+k);var A,L=(w||D)&&!k;t.iframe!==!1&&(t.iframe||L)?t.closeKeepAlive?e.get(t.closeKeepAlive,function(){A=s(v)}):A=s(v):A=(w||D)&&k?o(v):e.ajax(t),f.removeData("jqxhr").data("jqxhr",A);for(var E=0;E<h.length;E++)h[E]=null;return this.trigger("form-submit-notify",[this,t]),this},e.fn.ajaxForm=function(n){if(n=n||{},n.delegation=n.delegation&&e.isFunction(e.fn.on),!n.delegation&&0===this.length){var i={s:this.selector,c:this.context};return!e.isReady&&i.s?(a("DOM not ready, queuing ajaxForm"),e(function(){e(i.s,i.c).ajaxForm(n)}),this):(a("terminating; zero elements found by selector"+(e.isReady?"":" (DOM not ready)")),this)}return n.delegation?(e(document).off("submit.form-plugin",this.selector,t).off("click.form-plugin",this.selector,r).on("submit.form-plugin",this.selector,n,t).on("click.form-plugin",this.selector,n,r),this):this.ajaxFormUnbind().bind("submit.form-plugin",n,t).bind("click.form-plugin",n,r)},e.fn.ajaxFormUnbind=function(){return this.unbind("submit.form-plugin click.form-plugin")},e.fn.formToArray=function(t,r){var a=[];if(0===this.length)return a;var i,o=this[0],s=this.attr("id"),u=t?o.getElementsByTagName("*"):o.elements;if(u&&!/MSIE [678]/.test(navigator.userAgent)&&(u=e(u).get()),s&&(i=e(':input[form="'+s+'"]').get(),i.length&&(u=(u||[]).concat(i))),!u||!u.length)return a;var c,l,f,m,d,p,h;for(c=0,p=u.length;p>c;c++)if(d=u[c],f=d.name,f&&!d.disabled)if(t&&o.clk&&"image"==d.type)o.clk==d&&(a.push({name:f,value:e(d).val(),type:d.type}),a.push({name:f+".x",value:o.clk_x},{name:f+".y",value:o.clk_y}));else if(m=e.fieldValue(d,!0),m&&m.constructor==Array)for(r&&r.push(d),l=0,h=m.length;h>l;l++)a.push({name:f,value:m[l]});else if(n.fileapi&&"file"==d.type){r&&r.push(d);var v=d.files;if(v.length)for(l=0;l<v.length;l++)a.push({name:f,value:v[l],type:d.type});else a.push({name:f,value:"",type:d.type})}else null!==m&&"undefined"!=typeof m&&(r&&r.push(d),a.push({name:f,value:m,type:d.type,required:d.required}));if(!t&&o.clk){var g=e(o.clk),x=g[0];f=x.name,f&&!x.disabled&&"image"==x.type&&(a.push({name:f,value:g.val()}),a.push({name:f+".x",value:o.clk_x},{name:f+".y",value:o.clk_y}))}return a},e.fn.formSerialize=function(t){return e.param(this.formToArray(t))},e.fn.fieldSerialize=function(t){var r=[];return this.each(function(){var a=this.name;if(a){var n=e.fieldValue(this,t);if(n&&n.constructor==Array)for(var i=0,o=n.length;o>i;i++)r.push({name:a,value:n[i]});else null!==n&&"undefined"!=typeof n&&r.push({name:this.name,value:n})}}),e.param(r)},e.fn.fieldValue=function(t){for(var r=[],a=0,n=this.length;n>a;a++){var i=this[a],o=e.fieldValue(i,t);null===o||"undefined"==typeof o||o.constructor==Array&&!o.length||(o.constructor==Array?e.merge(r,o):r.push(o))}return r},e.fieldValue=function(t,r){var a=t.name,n=t.type,i=t.tagName.toLowerCase();if(void 0===r&&(r=!0),r&&(!a||t.disabled||"reset"==n||"button"==n||("checkbox"==n||"radio"==n)&&!t.checked||("submit"==n||"image"==n)&&t.form&&t.form.clk!=t||"select"==i&&-1==t.selectedIndex))return null;if("select"==i){var o=t.selectedIndex;if(0>o)return null;for(var s=[],u=t.options,c="select-one"==n,l=c?o+1:u.length,f=c?o:0;l>f;f++){var m=u[f];if(m.selected){var d=m.value;if(d||(d=m.attributes&&m.attributes.value&&!m.attributes.value.specified?m.text:m.value),c)return d;s.push(d)}}return s}return e(t).val()},e.fn.clearForm=function(t){return this.each(function(){e("input,select,textarea",this).clearFields(t)})},e.fn.clearFields=e.fn.clearInputs=function(t){var r=/^(?:color|date|datetime|email|month|number|password|range|search|tel|text|time|url|week)$/i;return this.each(function(){var a=this.type,n=this.tagName.toLowerCase();r.test(a)||"textarea"==n?this.value="":"checkbox"==a||"radio"==a?this.checked=!1:"select"==n?this.selectedIndex=-1:"file"==a?/MSIE/.test(navigator.userAgent)?e(this).replaceWith(e(this).clone(!0)):e(this).val(""):t&&(t===!0&&/hidden/.test(a)||"string"==typeof t&&e(this).is(t))&&(this.value="")})},e.fn.resetForm=function(){return this.each(function(){("function"==typeof this.reset||"object"==typeof this.reset&&!this.reset.nodeType)&&this.reset()})},e.fn.enable=function(e){return void 0===e&&(e=!0),this.each(function(){this.disabled=!e})},e.fn.selected=function(t){return void 0===t&&(t=!0),this.each(function(){var r=this.type;if("checkbox"==r||"radio"==r)this.checked=t;else if("option"==this.tagName.toLowerCase()){var a=e(this).parent("select");t&&a[0]&&"select-one"==a[0].type&&a.find("option").selected(!1),this.selected=t}})},e.fn.ajaxSubmit.debug=!1});
+;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
 Drupal.debounce = function (func, wait, immediate) {
   var timeout = void 0;
   var result = void 0;
@@ -1418,8 +2841,6 @@ Drupal.debounce = function (func, wait, immediate) {
     return result;
   };
 };;
-/*! jquery.cookie v1.4.1 | MIT */
-!function(a){"function"==typeof define&&define.amd?define(["jquery"],a):"object"==typeof exports?a(require("jquery")):a(jQuery)}(function(a){function b(a){return h.raw?a:encodeURIComponent(a)}function c(a){return h.raw?a:decodeURIComponent(a)}function d(a){return b(h.json?JSON.stringify(a):String(a))}function e(a){0===a.indexOf('"')&&(a=a.slice(1,-1).replace(/\\"/g,'"').replace(/\\\\/g,"\\"));try{return a=decodeURIComponent(a.replace(g," ")),h.json?JSON.parse(a):a}catch(b){}}function f(b,c){var d=h.raw?b:e(b);return a.isFunction(c)?c(d):d}var g=/\+/g,h=a.cookie=function(e,g,i){if(void 0!==g&&!a.isFunction(g)){if(i=a.extend({},h.defaults,i),"number"==typeof i.expires){var j=i.expires,k=i.expires=new Date;k.setTime(+k+864e5*j)}return document.cookie=[b(e),"=",d(g),i.expires?"; expires="+i.expires.toUTCString():"",i.path?"; path="+i.path:"",i.domain?"; domain="+i.domain:"",i.secure?"; secure":""].join("")}for(var l=e?void 0:{},m=document.cookie?document.cookie.split("; "):[],n=0,o=m.length;o>n;n++){var p=m[n].split("="),q=c(p.shift()),r=p.join("=");if(e&&e===q){l=f(r,g);break}e||void 0===(r=f(r))||(l[q]=r)}return l};h.defaults={},a.removeCookie=function(b,c){return void 0===a.cookie(b)?!1:(a.cookie(b,"",a.extend({},c,{expires:-1})),!a.cookie(b))}});;
 /**
 * DO NOT EDIT THIS FILE.
 * See the following change record for more information,
@@ -1578,134 +2999,535 @@ Drupal.debounce = function (func, wait, immediate) {
 * @preserve
 **/
 
-(function ($, Drupal, drupalSettings) {
-  Drupal.behaviors.machineName = {
-    attach: function attach(context, settings) {
-      var self = this;
-      var $context = $(context);
-      var timeout = null;
-      var xhr = null;
+(function ($, Drupal) {
+  Drupal.behaviors.detailsAria = {
+    attach: function attach() {
+      $('body').once('detailsAria').on('click.detailsAria', 'summary', function (event) {
+        var $summary = $(event.currentTarget);
+        var open = $(event.currentTarget.parentNode).attr('open') === 'open' ? 'false' : 'true';
 
-      function clickEditHandler(e) {
-        var data = e.data;
-        data.$wrapper.removeClass('visually-hidden');
-        data.$target.trigger('focus');
-        data.$suffix.hide();
-        data.$source.off('.machineName');
-      }
-
-      function machineNameHandler(e) {
-        var data = e.data;
-        var options = data.options;
-        var baseValue = $(e.target).val();
-
-        var rx = new RegExp(options.replace_pattern, 'g');
-        var expected = baseValue.toLowerCase().replace(rx, options.replace).substr(0, options.maxlength);
-
-        if (xhr && xhr.readystate !== 4) {
-          xhr.abort();
-          xhr = null;
-        }
-
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
-        }
-        if (baseValue.toLowerCase() !== expected) {
-          timeout = setTimeout(function () {
-            xhr = self.transliterate(baseValue, options).done(function (machine) {
-              self.showMachineName(machine.substr(0, options.maxlength), data);
-            });
-          }, 300);
-        } else {
-          self.showMachineName(expected, data);
-        }
-      }
-
-      Object.keys(settings.machineName).forEach(function (sourceId) {
-        var machine = '';
-        var options = settings.machineName[sourceId];
-
-        var $source = $context.find(sourceId).addClass('machine-name-source').once('machine-name');
-        var $target = $context.find(options.target).addClass('machine-name-target');
-        var $suffix = $context.find(options.suffix);
-        var $wrapper = $target.closest('.js-form-item');
-
-        if (!$source.length || !$target.length || !$suffix.length || !$wrapper.length) {
-          return;
-        }
-
-        if ($target.hasClass('error')) {
-          return;
-        }
-
-        options.maxlength = $target.attr('maxlength');
-
-        $wrapper.addClass('visually-hidden');
-
-        if ($target.is(':disabled') || $target.val() !== '') {
-          machine = $target.val();
-        } else if ($source.val() !== '') {
-          machine = self.transliterate($source.val(), options);
-        }
-
-        var $preview = $('<span class="machine-name-value">' + options.field_prefix + Drupal.checkPlain(machine) + options.field_suffix + '</span>');
-        $suffix.empty();
-        if (options.label) {
-          $suffix.append('<span class="machine-name-label">' + options.label + ': </span>');
-        }
-        $suffix.append($preview);
-
-        if ($target.is(':disabled')) {
-          return;
-        }
-
-        var eventData = {
-          $source: $source,
-          $target: $target,
-          $suffix: $suffix,
-          $wrapper: $wrapper,
-          $preview: $preview,
-          options: options
-        };
-
-        var $link = $('<span class="admin-link"><button type="button" class="link">' + Drupal.t('Edit') + '</button></span>').on('click', eventData, clickEditHandler);
-        $suffix.append($link);
-
-        if ($target.val() === '') {
-          $source.on('formUpdated.machineName', eventData, machineNameHandler).trigger('formUpdated.machineName');
-        }
-
-        $target.on('invalid', eventData, clickEditHandler);
-      });
-    },
-    showMachineName: function showMachineName(machine, data) {
-      var settings = data.options;
-
-      if (machine !== '') {
-        if (machine !== settings.replace) {
-          data.$target.val(machine);
-          data.$preview.html(settings.field_prefix + Drupal.checkPlain(machine) + settings.field_suffix);
-        }
-        data.$suffix.show();
-      } else {
-        data.$suffix.hide();
-        data.$target.val(machine);
-        data.$preview.empty();
-      }
-    },
-    transliterate: function transliterate(source, settings) {
-      return $.get(Drupal.url('machine_name/transliterate'), {
-        text: source,
-        langcode: drupalSettings.langcode,
-        replace_pattern: settings.replace_pattern,
-        replace_token: settings.replace_token,
-        replace: settings.replace,
-        lowercase: true
+        $summary.attr({
+          'aria-expanded': open,
+          'aria-pressed': open
+        });
       });
     }
   };
-})(jQuery, Drupal, drupalSettings);;
+})(jQuery, Drupal);;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
+(function ($, Modernizr, Drupal) {
+  function CollapsibleDetails(node) {
+    this.$node = $(node);
+    this.$node.data('details', this);
+
+    var anchor = location.hash && location.hash !== '#' ? ', ' + location.hash : '';
+    if (this.$node.find('.error' + anchor).length) {
+      this.$node.attr('open', true);
+    }
+
+    this.setupSummary();
+
+    this.setupLegend();
+  }
+
+  $.extend(CollapsibleDetails, {
+    instances: []
+  });
+
+  $.extend(CollapsibleDetails.prototype, {
+    setupSummary: function setupSummary() {
+      this.$summary = $('<span class="summary"></span>');
+      this.$node.on('summaryUpdated', $.proxy(this.onSummaryUpdated, this)).trigger('summaryUpdated');
+    },
+    setupLegend: function setupLegend() {
+      var $legend = this.$node.find('> summary');
+
+      $('<span class="details-summary-prefix visually-hidden"></span>').append(this.$node.attr('open') ? Drupal.t('Hide') : Drupal.t('Show')).prependTo($legend).after(document.createTextNode(' '));
+
+      $('<a class="details-title"></a>').attr('href', '#' + this.$node.attr('id')).prepend($legend.contents()).appendTo($legend);
+
+      $legend.append(this.$summary).on('click', $.proxy(this.onLegendClick, this));
+    },
+    onLegendClick: function onLegendClick(e) {
+      this.toggle();
+      e.preventDefault();
+    },
+    onSummaryUpdated: function onSummaryUpdated() {
+      var text = $.trim(this.$node.drupalGetSummary());
+      this.$summary.html(text ? ' (' + text + ')' : '');
+    },
+    toggle: function toggle() {
+      var _this = this;
+
+      var isOpen = !!this.$node.attr('open');
+      var $summaryPrefix = this.$node.find('> summary span.details-summary-prefix');
+      if (isOpen) {
+        $summaryPrefix.html(Drupal.t('Show'));
+      } else {
+        $summaryPrefix.html(Drupal.t('Hide'));
+      }
+
+      setTimeout(function () {
+        _this.$node.attr('open', !isOpen);
+      }, 0);
+    }
+  });
+
+  Drupal.behaviors.collapse = {
+    attach: function attach(context) {
+      if (Modernizr.details) {
+        return;
+      }
+      var $collapsibleDetails = $(context).find('details').once('collapse').addClass('collapse-processed');
+      if ($collapsibleDetails.length) {
+        for (var i = 0; i < $collapsibleDetails.length; i++) {
+          CollapsibleDetails.instances.push(new CollapsibleDetails($collapsibleDetails[i]));
+        }
+      }
+    }
+  };
+
+  var handleFragmentLinkClickOrHashChange = function handleFragmentLinkClickOrHashChange(e, $target) {
+    $target.parents('details').not('[open]').find('> summary').trigger('click');
+  };
+
+  $('body').on('formFragmentLinkClickOrHashChange.details', handleFragmentLinkClickOrHashChange);
+
+  Drupal.CollapsibleDetails = CollapsibleDetails;
+})(jQuery, Modernizr, Drupal);;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
+(function ($, Drupal) {
+  var states = {
+    postponed: []
+  };
+
+  Drupal.states = states;
+
+  Drupal.behaviors.states = {
+    attach: function attach(context, settings) {
+      var $states = $(context).find('[data-drupal-states]');
+      var il = $states.length;
+
+      var _loop = function _loop(i) {
+        var config = JSON.parse($states[i].getAttribute('data-drupal-states'));
+        Object.keys(config || {}).forEach(function (state) {
+          new states.Dependent({
+            element: $($states[i]),
+            state: states.State.sanitize(state),
+            constraints: config[state]
+          });
+        });
+      };
+
+      for (var i = 0; i < il; i++) {
+        _loop(i);
+      }
+
+      while (states.postponed.length) {
+        states.postponed.shift()();
+      }
+    }
+  };
+
+  states.Dependent = function (args) {
+    var _this = this;
+
+    $.extend(this, { values: {}, oldValue: null }, args);
+
+    this.dependees = this.getDependees();
+    Object.keys(this.dependees || {}).forEach(function (selector) {
+      _this.initializeDependee(selector, _this.dependees[selector]);
+    });
+  };
+
+  states.Dependent.comparisons = {
+    RegExp: function RegExp(reference, value) {
+      return reference.test(value);
+    },
+    Function: function Function(reference, value) {
+      return reference(value);
+    },
+    Number: function Number(reference, value) {
+      return typeof value === 'string' ? _compare2(reference.toString(), value) : _compare2(reference, value);
+    }
+  };
+
+  states.Dependent.prototype = {
+    initializeDependee: function initializeDependee(selector, dependeeStates) {
+      var state = void 0;
+      var self = this;
+
+      function stateEventHandler(e) {
+        self.update(e.data.selector, e.data.state, e.value);
+      }
+
+      this.values[selector] = {};
+
+      for (var i in dependeeStates) {
+        if (dependeeStates.hasOwnProperty(i)) {
+          state = dependeeStates[i];
+
+          if ($.inArray(state, dependeeStates) === -1) {
+            continue;
+          }
+
+          state = states.State.sanitize(state);
+
+          this.values[selector][state.name] = null;
+
+          $(selector).on('state:' + state, { selector: selector, state: state }, stateEventHandler);
+
+          new states.Trigger({ selector: selector, state: state });
+        }
+      }
+    },
+    compare: function compare(reference, selector, state) {
+      var value = this.values[selector][state.name];
+      if (reference.constructor.name in states.Dependent.comparisons) {
+        return states.Dependent.comparisons[reference.constructor.name](reference, value);
+      }
+
+      return _compare2(reference, value);
+    },
+    update: function update(selector, state, value) {
+      if (value !== this.values[selector][state.name]) {
+        this.values[selector][state.name] = value;
+        this.reevaluate();
+      }
+    },
+    reevaluate: function reevaluate() {
+      var value = this.verifyConstraints(this.constraints);
+
+      if (value !== this.oldValue) {
+        this.oldValue = value;
+
+        value = invert(value, this.state.invert);
+
+        this.element.trigger({ type: 'state:' + this.state, value: value, trigger: true });
+      }
+    },
+    verifyConstraints: function verifyConstraints(constraints, selector) {
+      var result = void 0;
+      if ($.isArray(constraints)) {
+        var hasXor = $.inArray('xor', constraints) === -1;
+        var len = constraints.length;
+        for (var i = 0; i < len; i++) {
+          if (constraints[i] !== 'xor') {
+            var constraint = this.checkConstraints(constraints[i], selector, i);
+
+            if (constraint && (hasXor || result)) {
+              return hasXor;
+            }
+            result = result || constraint;
+          }
+        }
+      } else if ($.isPlainObject(constraints)) {
+          for (var n in constraints) {
+            if (constraints.hasOwnProperty(n)) {
+              result = ternary(result, this.checkConstraints(constraints[n], selector, n));
+
+              if (result === false) {
+                return false;
+              }
+            }
+          }
+        }
+      return result;
+    },
+    checkConstraints: function checkConstraints(value, selector, state) {
+      if (typeof state !== 'string' || /[0-9]/.test(state[0])) {
+        state = null;
+      } else if (typeof selector === 'undefined') {
+        selector = state;
+        state = null;
+      }
+
+      if (state !== null) {
+        state = states.State.sanitize(state);
+        return invert(this.compare(value, selector, state), state.invert);
+      }
+
+      return this.verifyConstraints(value, selector);
+    },
+    getDependees: function getDependees() {
+      var cache = {};
+
+      var _compare = this.compare;
+      this.compare = function (reference, selector, state) {
+        (cache[selector] || (cache[selector] = [])).push(state.name);
+      };
+
+      this.verifyConstraints(this.constraints);
+
+      this.compare = _compare;
+
+      return cache;
+    }
+  };
+
+  states.Trigger = function (args) {
+    $.extend(this, args);
+
+    if (this.state in states.Trigger.states) {
+      this.element = $(this.selector);
+
+      if (!this.element.data('trigger:' + this.state)) {
+        this.initialize();
+      }
+    }
+  };
+
+  states.Trigger.prototype = {
+    initialize: function initialize() {
+      var _this2 = this;
+
+      var trigger = states.Trigger.states[this.state];
+
+      if (typeof trigger === 'function') {
+        trigger.call(window, this.element);
+      } else {
+        Object.keys(trigger || {}).forEach(function (event) {
+          _this2.defaultTrigger(event, trigger[event]);
+        });
+      }
+
+      this.element.data('trigger:' + this.state, true);
+    },
+    defaultTrigger: function defaultTrigger(event, valueFn) {
+      var oldValue = valueFn.call(this.element);
+
+      this.element.on(event, $.proxy(function (e) {
+        var value = valueFn.call(this.element, e);
+
+        if (oldValue !== value) {
+          this.element.trigger({ type: 'state:' + this.state, value: value, oldValue: oldValue });
+          oldValue = value;
+        }
+      }, this));
+
+      states.postponed.push($.proxy(function () {
+        this.element.trigger({ type: 'state:' + this.state, value: oldValue, oldValue: null });
+      }, this));
+    }
+  };
+
+  states.Trigger.states = {
+    empty: {
+      keyup: function keyup() {
+        return this.val() === '';
+      }
+    },
+
+    checked: {
+      change: function change() {
+        var checked = false;
+        this.each(function () {
+          checked = $(this).prop('checked');
+
+          return !checked;
+        });
+        return checked;
+      }
+    },
+
+    value: {
+      keyup: function keyup() {
+        if (this.length > 1) {
+          return this.filter(':checked').val() || false;
+        }
+        return this.val();
+      },
+      change: function change() {
+        if (this.length > 1) {
+          return this.filter(':checked').val() || false;
+        }
+        return this.val();
+      }
+    },
+
+    collapsed: {
+      collapsed: function collapsed(e) {
+        return typeof e !== 'undefined' && 'value' in e ? e.value : !this.is('[open]');
+      }
+    }
+  };
+
+  states.State = function (state) {
+    this.pristine = state;
+    this.name = state;
+
+    var process = true;
+    do {
+      while (this.name.charAt(0) === '!') {
+        this.name = this.name.substring(1);
+        this.invert = !this.invert;
+      }
+
+      if (this.name in states.State.aliases) {
+        this.name = states.State.aliases[this.name];
+      } else {
+        process = false;
+      }
+    } while (process);
+  };
+
+  states.State.sanitize = function (state) {
+    if (state instanceof states.State) {
+      return state;
+    }
+
+    return new states.State(state);
+  };
+
+  states.State.aliases = {
+    enabled: '!disabled',
+    invisible: '!visible',
+    invalid: '!valid',
+    untouched: '!touched',
+    optional: '!required',
+    filled: '!empty',
+    unchecked: '!checked',
+    irrelevant: '!relevant',
+    expanded: '!collapsed',
+    open: '!collapsed',
+    closed: 'collapsed',
+    readwrite: '!readonly'
+  };
+
+  states.State.prototype = {
+    invert: false,
+
+    toString: function toString() {
+      return this.name;
+    }
+  };
+
+  var $document = $(document);
+  $document.on('state:disabled', function (e) {
+    if (e.trigger) {
+      $(e.target).prop('disabled', e.value).closest('.js-form-item, .js-form-submit, .js-form-wrapper').toggleClass('form-disabled', e.value).find('select, input, textarea').prop('disabled', e.value);
+    }
+  });
+
+  $document.on('state:required', function (e) {
+    if (e.trigger) {
+      if (e.value) {
+        var label = 'label' + (e.target.id ? '[for=' + e.target.id + ']' : '');
+        var $label = $(e.target).attr({ required: 'required', 'aria-required': 'aria-required' }).closest('.js-form-item, .js-form-wrapper').find(label);
+
+        if (!$label.hasClass('js-form-required').length) {
+          $label.addClass('js-form-required form-required');
+        }
+      } else {
+        $(e.target).removeAttr('required aria-required').closest('.js-form-item, .js-form-wrapper').find('label.js-form-required').removeClass('js-form-required form-required');
+      }
+    }
+  });
+
+  $document.on('state:visible', function (e) {
+    if (e.trigger) {
+      $(e.target).closest('.js-form-item, .js-form-submit, .js-form-wrapper').toggle(e.value);
+    }
+  });
+
+  $document.on('state:checked', function (e) {
+    if (e.trigger) {
+      $(e.target).prop('checked', e.value);
+    }
+  });
+
+  $document.on('state:collapsed', function (e) {
+    if (e.trigger) {
+      if ($(e.target).is('[open]') === e.value) {
+        $(e.target).find('> summary').trigger('click');
+      }
+    }
+  });
+
+  function ternary(a, b) {
+    if (typeof a === 'undefined') {
+      return b;
+    } else if (typeof b === 'undefined') {
+      return a;
+    }
+
+    return a && b;
+  }
+
+  function invert(a, invertState) {
+    return invertState && typeof a !== 'undefined' ? !a : a;
+  }
+
+  function _compare2(a, b) {
+    if (a === b) {
+      return typeof a === 'undefined' ? a : true;
+    }
+
+    return typeof a === 'undefined' || typeof b === 'undefined';
+  }
+})(jQuery, Drupal);;
+window.matchMedia||(window.matchMedia=function(){"use strict";var e=window.styleMedia||window.media;if(!e){var t=document.createElement("style"),i=document.getElementsByTagName("script")[0],n=null;t.type="text/css";t.id="matchmediajs-test";i.parentNode.insertBefore(t,i);n="getComputedStyle"in window&&window.getComputedStyle(t,null)||t.currentStyle;e={matchMedium:function(e){var i="@media "+e+"{ #matchmediajs-test { width: 1px; } }";if(t.styleSheet){t.styleSheet.cssText=i}else{t.textContent=i}return n.width==="1px"}}}return function(t){return{matches:e.matchMedium(t||"all"),media:t||"all"}}}());
+;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
+(function ($, Drupal) {
+  function init(i, tab) {
+    var $tab = $(tab);
+    var $target = $tab.find('[data-drupal-nav-tabs-target]');
+    var isCollapsible = $tab.hasClass('is-collapsible');
+
+    function openMenu(e) {
+      $target.toggleClass('is-open');
+    }
+
+    function handleResize(e) {
+      $tab.addClass('is-horizontal');
+      var $tabs = $tab.find('.tabs');
+      var isHorizontal = $tabs.outerHeight() <= $tabs.find('.tabs__tab').outerHeight();
+      $tab.toggleClass('is-horizontal', isHorizontal);
+      if (isCollapsible) {
+        $tab.toggleClass('is-collapse-enabled', !isHorizontal);
+      }
+      if (isHorizontal) {
+        $target.removeClass('is-open');
+      }
+    }
+
+    $tab.addClass('position-container is-horizontal-enabled');
+
+    $tab.on('click.tabs', '[data-drupal-nav-tabs-trigger]', openMenu);
+    $(window).on('resize.tabs', Drupal.debounce(handleResize, 150)).trigger('resize.tabs');
+  }
+
+  Drupal.behaviors.navTabs = {
+    attach: function attach(context, settings) {
+      var $tabs = $(context).find('[data-drupal-nav-tabs]');
+      if ($tabs.length) {
+        var notSmartPhone = window.matchMedia('(min-width: 300px)');
+        if (notSmartPhone.matches) {
+          $tabs.once('nav-tabs').each(init);
+        }
+      }
+    }
+  };
+})(jQuery, Drupal);;
 /**
 * DO NOT EDIT THIS FILE.
 * See the following change record for more information,
@@ -1767,8 +3589,6 @@ Drupal.debounce = function (func, wait, immediate) {
     return debounce(announce, 200)();
   };
 })(Drupal, Drupal.debounce);;
-window.matchMedia||(window.matchMedia=function(){"use strict";var e=window.styleMedia||window.media;if(!e){var t=document.createElement("style"),i=document.getElementsByTagName("script")[0],n=null;t.type="text/css";t.id="matchmediajs-test";i.parentNode.insertBefore(t,i);n="getComputedStyle"in window&&window.getComputedStyle(t,null)||t.currentStyle;e={matchMedium:function(e){var i="@media "+e+"{ #matchmediajs-test { width: 1px; } }";if(t.styleSheet){t.styleSheet.cssText=i}else{t.textContent=i}return n.width==="1px"}}}return function(t){return{matches:e.matchMedium(t||"all"),media:t||"all"}}}());
-;
 (function(){if(window.matchMedia&&window.matchMedia("all").addListener){return false}var e=window.matchMedia,i=e("only all").matches,n=false,t=0,a=[],r=function(i){clearTimeout(t);t=setTimeout(function(){for(var i=0,n=a.length;i<n;i++){var t=a[i].mql,r=a[i].listeners||[],o=e(t.media).matches;if(o!==t.matches){t.matches=o;for(var s=0,l=r.length;s<l;s++){r[s].call(window,t)}}}},30)};window.matchMedia=function(t){var o=e(t),s=[],l=0;o.addListener=function(e){if(!i){return}if(!n){n=true;window.addEventListener("resize",r,true)}if(l===0){l=a.push({mql:o,listeners:s})}s.push(e)};o.removeListener=function(e){for(var i=0,n=s.length;i<n;i++){if(s[i]===e){s.splice(i,1)}}};return o}})();
 ;
 /**
@@ -4131,4 +5951,84 @@ window.matchMedia||(window.matchMedia=function(){"use strict";var e=window.style
       }
     }
   };
+})(jQuery, Drupal, drupalSettings);;
+/**
+* DO NOT EDIT THIS FILE.
+* See the following change record for more information,
+* https://www.drupal.org/node/2815083
+* @preserve
+**/
+
+(function ($, Drupal, drupalSettings) {
+  function bigPipeProcessPlaceholderReplacement(index, placeholderReplacement) {
+    var placeholderId = placeholderReplacement.getAttribute('data-big-pipe-replacement-for-placeholder-with-id');
+    var content = this.textContent.trim();
+
+    if (typeof drupalSettings.bigPipePlaceholderIds[placeholderId] !== 'undefined') {
+      var response = mapTextContentToAjaxResponse(content);
+
+      if (response === false) {
+        $(this).removeOnce('big-pipe');
+      } else {
+        var ajaxObject = Drupal.ajax({
+          url: '',
+          base: false,
+          element: false,
+          progress: false
+        });
+
+        ajaxObject.success(response, 'success');
+      }
+    }
+  }
+
+  function mapTextContentToAjaxResponse(content) {
+    if (content === '') {
+      return false;
+    }
+
+    try {
+      return JSON.parse(content);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function bigPipeProcessDocument(context) {
+    if (!context.querySelector('script[data-big-pipe-event="start"]')) {
+      return false;
+    }
+
+    $(context).find('script[data-big-pipe-replacement-for-placeholder-with-id]').once('big-pipe').each(bigPipeProcessPlaceholderReplacement);
+
+    if (context.querySelector('script[data-big-pipe-event="stop"]')) {
+      if (timeoutID) {
+        clearTimeout(timeoutID);
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  function bigPipeProcess() {
+    timeoutID = setTimeout(function () {
+      if (!bigPipeProcessDocument(document)) {
+        bigPipeProcess();
+      }
+    }, interval);
+  }
+
+  var interval = drupalSettings.bigPipeInterval || 50;
+
+  var timeoutID = void 0;
+
+  bigPipeProcess();
+
+  $(window).on('load', function () {
+    if (timeoutID) {
+      clearTimeout(timeoutID);
+    }
+    bigPipeProcessDocument(document);
+  });
 })(jQuery, Drupal, drupalSettings);;

@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains csd_menu.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function csd_menu_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the csd_menu module.
+    case 'help.page.csd_menu':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('CSD - Custom development') . '</p>';
+      return $output;
+
+    default:
+  }
+}

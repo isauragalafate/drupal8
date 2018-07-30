@@ -1,0 +1,5 @@
+name: 'CSD Menu'
+type: module
+description: 'CSD - Custom development'
+core: 8.x
+package: 'Custom'
