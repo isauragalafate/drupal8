@@ -6,6 +6,7 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Menu\DefaultMenuLinkTreeManipulators;
@@ -70,11 +71,8 @@ class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    */
   public function build() {
     $build = [];
-    $build['csd_menu_bock']['#markup'] = 'Implement MenuBlock.';
-    $build['#cache'] = [
-        'contexts' => ['route']
-      ];
     $menu_name = 'main';
+    $menu_root = [];
     $menu_name = $this->getDerivativeId();
     $level = 2;
     $depth = 1;
@@ -82,52 +80,57 @@ class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
     $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name);
     $parameters->setMaxDepth(9);
     $parameters->setMinDepth($level);
-    //$parameters->setMinDepth(1);
     $parameters->onlyEnabledLinks();
-    //$parameters->addExpandedParents();
-    //$parameters->setTopLevelOnly(0);
+
     if ($depth > 0) {
       $parameters->setMaxDepth(min($level + $depth - 1, $menu_tree->maxDepth()));
     }
-    // For menu blocks with start level greater than 1, only show menu items
-    // from the current active trail. Adjust the root according to the current
-    // position in the menu in order to determine if we can show the subtree.
-    if ($level > 1) {
-      if (count($parameters->activeTrail) >= $level) {
-        // Active trail array is child-first. Reverse it, and pull the new menu
-        // root based on the parent of the configured start level.
-        $menu_trail_ids = array_reverse(array_values($parameters->activeTrail));
-        $menu_root = $menu_trail_ids[count($menu_trail_ids)-2];
-        $menu_root_uuid = explode(':', $menu_root)[1];
+
+    if (count($parameters->activeTrail) >= $level) {
+      // Active trail array is child-first. Reverse it, and pull the new menu
+      // root based on the parent of the configured start level.
+      $menu_trail_ids = array_reverse(array_values($parameters->activeTrail));
+      $menu_root_id = $menu_trail_ids[count($menu_trail_ids) - 2];
+      $menu_root_id_explode = explode(':', $menu_root_id);
+      if (isset($menu_root_id_explode[1])) {
+        $parameters->setRoot($menu_root_id)->setMinDepth(1);
+        $menu_root_uuid = $menu_root_id_explode[1];
         $menu_root_entity = \Drupal::service('entity.repository')
           ->loadEntityByUuid('menu_link_content', $menu_root_uuid);
-        $menu_root_title = $menu_root_entity->getTitle();
-        $menu_root_url = $menu_root_entity->link;
-        $parameters->setRoot($menu_root)->setMinDepth(1);
+        $menu_root['title'] = $menu_root_entity->getTitle();
+        $menu_root_url = $menu_root_entity->getUrlObject();
+        $menu_root_link_options = [
+          'attributes' => [
+            'class' => [
+              'csd-menu-main-root-link',
+            ],
+            'title' => $this->t('Go to the previous level')
+          ],
+        ];
+        $menu_root_url->setOptions($menu_root_link_options);
+        $menu_root['link'] = Link::fromTextAndUrl($this->t('Previous'), $menu_root_url);
         if ($depth > 0) {
           $parameters->setMaxDepth(min($level - 1 + $depth - 1, $this->menuTree->maxDepth()));
         }
       }
-      else {
-        return [];
-      }
+    }
+    else {
+      return [];
     }
 
-    $tree = $menu_tree->load($menu_name, $parameters);
-    $manipulators = array(
-      array('callable' => 'menu.default_tree_manipulators:checkAccess'),
-      array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
-    );
-    $tree = $menu_tree->transform($tree, $manipulators);
+    if (!empty($menu_root)) {
+      $tree = $menu_tree->load($menu_name, $parameters);
+      $manipulators = array(
+        array('callable' => 'menu.default_tree_manipulators:checkAccess'),
+        array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
+      );
+      $tree = $menu_tree->transform($tree, $manipulators);
 
-    $menu_root = [
-     'title' => $menu_root_title,
-     'url' => $menu_root_url
-    ];
-    $build = $menu_tree->build($tree);
-    $build['#theme'] = 'csd_menu_main';
-    $build['#menu_root'] = $menu_root;
-   $x='a';
+      $build = $menu_tree->build($tree);
+      $build['#theme'] = 'csd_menu_main';
+      $build['#menu_root'] = $menu_root;
+    }
+
     return $build;
   }
 
