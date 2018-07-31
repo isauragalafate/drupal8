@@ -1,0 +1,4 @@
+csc_menu_edit:
+  title: 'Edit menu'
+  route_name: 'entity.menu.edit_form.main'
+  group: 'block'

@@ -21,12 +21,8 @@ use Drupal\Core\Link;
  *
  * @Block(
  *  id = "csd_menu_bock",
- *  admin_label = @Translation("Menu block"),
- *  category = @Translation("Menus"),
- *  deriver = "Drupal\system\Plugin\Derivative\SystemMenuBlock",
- *  forms = {
- *    "settings_tray" = "\Drupal\system\Form\SystemMenuOffCanvasForm",
- *  },
+ *  admin_label = @Translation("CSD Main navigation"),
+ *  category = @Translation("Menus")
  * )
  */
 class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
@@ -70,10 +66,8 @@ class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function build() {
-    $build = [];
+    $build = $menu_root = [];
     $menu_name = 'main';
-    $menu_root = [];
-    $menu_name = $this->getDerivativeId();
     $level = 2;
     $depth = 1;
     $menu_tree = \Drupal::menuTree();
@@ -138,12 +132,8 @@ class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function getCacheTags() {
-    // Even when the menu block renders to the empty string for a user, we want
-    // the cache tag for this menu to be set: whenever the menu is changed, this
-    // menu block must also be re-rendered for that user, because maybe a menu
-    // link that is accessible for that user has been added.
     $cache_tags = parent::getCacheTags();
-    $cache_tags[] = 'config:system.menu.' . $this->getDerivativeId();
+    $cache_tags[] = 'config:system.menu.main';
     return $cache_tags;
   }
 
@@ -151,72 +141,7 @@ class MenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function getCacheContexts() {
-    // ::build() uses MenuLinkTreeInterface::getCurrentRouteMenuTreeParameters()
-    // to generate menu tree parameters, and those take the active menu trail
-    // into account. Therefore, we must vary the rendered menu by the active
-    // trail of the rendered menu.
-    // Additional cache contexts, e.g. those that determine link text or
-    // accessibility of a menu, will be bubbled automatically.
-    $menu_name = $this->getDerivativeId();
+    $menu_name = 'main';
     return Cache::mergeContexts(parent::getCacheContexts(), ['route.menu_active_trails:' . $menu_name]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function blockForm($form, FormStateInterface $form_state) {
-    $config = $this->configuration;
-
-    $defaults = $this->defaultConfiguration();
-    $form['menu_levels'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Menu levels'),
-      // Open if not set to defaults.
-      '#open' => $defaults['level'] !== $config['level'] || $defaults['depth'] !== $config['depth'],
-      '#process' => [[get_class(), 'processMenuLevelParents']],
-    ];
-
-    $options = range(0, $this->menuTree->maxDepth());
-    unset($options[0]);
-
-    $form['menu_levels']['level'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Initial visibility level'),
-      '#default_value' => $config['level'],
-      '#options' => $options,
-      '#description' => $this->t('The menu is only visible if the menu item for the current page is at this level or below it. Use level 1 to always display this menu.'),
-      '#required' => TRUE,
-    ];
-
-    $options[0] = $this->t('Unlimited');
-
-    $form['menu_levels']['depth'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Number of levels to display'),
-      '#default_value' => $config['depth'],
-      '#options' => $options,
-      '#description' => $this->t('This maximum number includes the initial level.'),
-      '#required' => TRUE,
-    ];
-
-    return $form;
-  }
-
-  /**
-   * Form API callback: Processes the menu_levels field element.
-   *
-   * Adjusts the #parents of menu_levels to save its children at the top level.
-   */
-  public static function processMenuLevelParents(&$element, FormStateInterface $form_state, &$complete_form) {
-    array_pop($element['#parents']);
-    return $element;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function blockSubmit($form, FormStateInterface $form_state) {
-    $this->configuration['level'] = $form_state->getValue('level');
-    $this->configuration['depth'] = $form_state->getValue('depth');
   }
 }
