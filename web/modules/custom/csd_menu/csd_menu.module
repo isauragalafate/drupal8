@@ -22,3 +22,18 @@ function csd_menu_help($route_name, RouteMatchInterface $route_match) {
     default:
   }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function csd_menu_theme($existing, $type, $theme, $path) {
+  return [
+    'csd_menu_main' => [
+      'variables' => [
+        'menu_root' => '',
+        'items' => '',
+      ],
+      'template' => 'csd-menu-main',
+    ],
+  ];
+}
