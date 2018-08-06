@@ -37,3 +37,45 @@ function csd_menu_theme($existing, $type, $theme, $path) {
     ],
   ];
 }
+
+function csd_menu_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity->bundle() == 'node') {
+    $title = $entity->label();
+    $id = $entity->id();
+    if ($entity->hasField('field_category')) {
+      $categories = $entity->get('field_category')->getValue();
+      if (!empty($categories) & is_array($categories)) {
+        foreach ($categories as $category) {
+          if (isset($category['target_id'])) {
+            $tid = $category['target_id'];
+            $x='a';
+            /*
+            $menuu = $entity->get('menu');
+            $menu_value = $entity->get('menu')->value;
+            $url = 'node/' . $entity->id();
+            */
+            if ($tid) {
+              $menu_name = 'main';
+              $taxonomy_name = 'category';
+              //$menu_handler = \Drupal::service('plugin.manager.menu.link');
+              //$parent = 'main:taxonomy_menu.menu_link:taxonomy_menu.menu_link.category.4';
+              $parent = $menu_name. ':taxonomy_menu.menu_link:taxonomy_menu.menu_link.'. $taxonomy_name . '.' . $tid;
+              $menu_item = \Drupal\menu_link_content\Entity\MenuLinkContent::create([
+                'title' => $title,
+                'link' => ['uri' => 'internal:/node' . $id],
+                'menu_name' => $menu_name,
+                'parent' => $parent,
+                'expanded' => TRUE,
+              ]);
+
+              $menu_item->save();
+            }
+          }
+        }
+      }
+    }
+    else {
+      $x='aa';
+    }
+  }
+}

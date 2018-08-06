@@ -40,6 +40,7 @@
         "drupal/entity_usage": "^2.0@alpha",
         "drupal/field_group": "^1.0",
         "drupal/inline_entity_form": "^1.0@RC",
+        "drupal/menu_force": "^1.0",
         "drupal/migrate_default_content": "^2.0",
         "drupal/migrate_source_yml": "^1.0",
         "drupal/nodeaccess": "^1.0@beta",
