@@ -1,0 +1,7 @@
+uuid: 0e0bd905-37af-4106-82ad-3e994e70c321
+langcode: en
+status: true
+dependencies: {  }
+id: right_card
+label: 'Right card'
+classes: right-card

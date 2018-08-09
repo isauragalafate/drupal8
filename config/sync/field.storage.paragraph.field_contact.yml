@@ -1,19 +1,19 @@
-uuid: ac1410ed-c7cb-4191-b080-86b4cbf7450a
+uuid: 318579db-49b4-434f-8b75-eca054672a69
 langcode: en
 status: true
 dependencies:
   module:
-    - classy_paragraphs
+    - block
     - paragraphs
-id: paragraph.field_classy_paragraphs_style
-field_name: field_classy_paragraphs_style
+id: paragraph.field_contact
+field_name: field_contact
 entity_type: paragraph
 type: entity_reference
 settings:
-  target_type: classy_paragraphs_style
+  target_type: block
 module: core
 locked: false
-cardinality: -1
+cardinality: 1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

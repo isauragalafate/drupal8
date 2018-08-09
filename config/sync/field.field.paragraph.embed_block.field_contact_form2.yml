@@ -1,0 +1,22 @@
+uuid: de86fc78-7ef1-465d-8850-5f7f83f85ff1
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_contact_form2
+    - paragraphs.paragraphs_type.embed_block
+  module:
+    - block_field
+id: paragraph.embed_block.field_contact_form2
+field_name: field_contact_form2
+entity_type: paragraph
+bundle: embed_block
+label: 'Contact form2'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  plugin_ids: {  }
+field_type: block_field

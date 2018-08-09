@@ -1,7 +1,18 @@
 uuid: 2129f77c-b005-4450-9549-5517824e6e23
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - menu_force
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+  menu_force:
+    menu_force: 0
+    menu_force_parent: 0
 _core:
   default_config_hash: KuyA4NHPXcmKAjRtwa0vQc2ZcyrUJy6IlS2TAyMNRbc
 name: 'Basic page'

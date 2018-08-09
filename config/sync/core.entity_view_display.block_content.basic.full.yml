@@ -1,9 +1,10 @@
-uuid: 09614f70-4baf-404e-917f-5cdbde3da6d0
+uuid: f1425a92-6d5b-4f75-ac36-8404d4b919fd
 langcode: en
 status: true
 dependencies:
   config:
     - block_content.type.basic
+    - core.entity_view_mode.block_content.full
     - field.field.block_content.basic.body
   module:
     - field_group
@@ -28,10 +29,10 @@ third_party_settings:
       label: Jumbotron
 _core:
   default_config_hash: orJpHUlAc_wiQLMUjIgEJXGeiqylGHMPcmNRjGtct-M
-id: block_content.basic.default
+id: block_content.basic.full
 targetEntityType: block_content
 bundle: basic
-mode: default
+mode: full
 content:
   body:
     label: hidden

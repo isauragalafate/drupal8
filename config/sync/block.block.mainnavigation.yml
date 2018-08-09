@@ -1,0 +1,24 @@
+uuid: 58e5fa5e-2982-426f-a854-bbc64d270441
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - da_vinci
+id: mainnavigation
+theme: da_vinci
+region: sidebar_first
+weight: -8
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Main navigation'
+  provider: system
+  label_display: '0'
+  level: 1
+  depth: 0
+visibility: {  }

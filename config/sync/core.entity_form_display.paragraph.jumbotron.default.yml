@@ -1,0 +1,35 @@
+uuid: 9746a1eb-6c28-49a3-8c9a-2fcf1793671f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.jumbotron.field_body
+    - field.field.paragraph.jumbotron.field_title
+    - paragraphs.paragraphs_type.jumbotron
+  module:
+    - text
+id: paragraph.jumbotron.default
+targetEntityType: paragraph
+bundle: jumbotron
+mode: default
+content:
+  field_body:
+    weight: 1
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: text_textarea
+    region: content
+  field_title:
+    weight: 0
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+hidden:
+  created: true
+  status: true
+  uid: true

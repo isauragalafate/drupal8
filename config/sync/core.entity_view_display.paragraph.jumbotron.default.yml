@@ -1,0 +1,56 @@
+uuid: fb4ee6d6-e3cf-4673-bc82-2e69b9c868d7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.jumbotron.field_body
+    - field.field.paragraph.jumbotron.field_title
+    - paragraphs.paragraphs_type.jumbotron
+  module:
+    - field_group
+    - text
+third_party_settings:
+  field_group:
+    group_jumbotron:
+      children:
+        - field_title
+        - field_body
+      parent_name: ''
+      weight: 20
+      format_type: pattern_formatter
+      format_settings:
+        label: Jumbotron
+        pattern: jumbotron
+        pattern_mapping:
+          'fields:field_body':
+            destination: subtitle
+            weight: 0
+            plugin: fields
+            source: field_body
+          'fields:field_title':
+            destination: title
+            weight: 1
+            plugin: fields
+            source: field_title
+      label: Jumbotron
+id: paragraph.jumbotron.default
+targetEntityType: paragraph
+bundle: jumbotron
+mode: default
+content:
+  field_body:
+    weight: 1
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_title:
+    weight: 0
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+hidden: {  }

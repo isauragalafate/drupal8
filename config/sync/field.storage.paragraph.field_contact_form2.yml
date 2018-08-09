@@ -1,0 +1,19 @@
+uuid: 66739789-3858-4156-b921-20f94efd8423
+langcode: en
+status: true
+dependencies:
+  module:
+    - block_field
+    - paragraphs
+id: paragraph.field_contact_form2
+field_name: field_contact_form2
+entity_type: paragraph
+type: block_field
+settings: {  }
+module: block_field
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

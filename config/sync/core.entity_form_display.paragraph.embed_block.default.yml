@@ -5,7 +5,11 @@ dependencies:
   config:
     - field.field.paragraph.embed_block.field_block
     - field.field.paragraph.embed_block.field_classy_paragraphs_style
+    - field.field.paragraph.embed_block.field_contact
+    - field.field.paragraph.embed_block.field_contact_form2
     - paragraphs.paragraphs_type.embed_block
+  module:
+    - block_field
 id: paragraph.embed_block.default
 targetEntityType: paragraph
 bundle: embed_block
@@ -22,6 +26,24 @@ content:
     settings: {  }
     third_party_settings: {  }
     type: options_select
+    region: content
+  field_contact:
+    weight: 2
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_contact_form2:
+    weight: 3
+    settings:
+      plugin_id: ''
+      settings: {  }
+      configuration_form: full
+    third_party_settings: {  }
+    type: block_field_default
     region: content
 hidden:
   created: true

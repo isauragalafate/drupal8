@@ -1,0 +1,23 @@
+uuid: 16fb8e5c-b768-4c3f-baa3-b104ac86ae65
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.paragraph.field_contact
+    - paragraphs.paragraphs_type.embed_block
+id: paragraph.embed_block.field_contact
+field_name: field_contact
+entity_type: paragraph
+bundle: embed_block
+label: 'Contact form'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:block'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference
