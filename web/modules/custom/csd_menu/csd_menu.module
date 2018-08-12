@@ -62,7 +62,7 @@ function csd_menu_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
               $parent = $menu_name. ':taxonomy_menu.menu_link:taxonomy_menu.menu_link.'. $taxonomy_name . '.' . $tid;
               $menu_item = \Drupal\menu_link_content\Entity\MenuLinkContent::create([
                 'title' => $title,
-                'link' => ['uri' => 'internal:/node' . $id],
+                'link' => ['uri' => 'internal:/node/' . $id],
                 'menu_name' => $menu_name,
                 'parent' => $parent,
                 'expanded' => TRUE,

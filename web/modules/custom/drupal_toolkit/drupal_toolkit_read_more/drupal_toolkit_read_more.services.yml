@@ -1,0 +1,4 @@
+services:
+  url_scope:
+    class: Drupal\drupal_toolkit_read_more\UrlScope
+    arguments: []

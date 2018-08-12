@@ -1,0 +1,11 @@
+social_networks:
+  rss: 'rss.xml'
+  twitter: 'https://twitter.com/'
+  facebook: 'https://www.facebook.com/'
+  instagram: 'https://www.instagram.com/'
+  linkedin: "https://www.linkedin.com/"
+  flickr: "https://www.flickr.com/photos/"
+  youtube: 'http://www.youtube.com/'
+  vimeo: 'http://vimeo.com/'
+  dailymotion: "https://www.dailymotion.com/"
+  blog: 'http://www.blog.com'

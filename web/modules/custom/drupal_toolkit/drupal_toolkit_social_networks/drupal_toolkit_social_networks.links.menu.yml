@@ -1,0 +1,11 @@
+drupal_toolkit_social_networks.admin_config_general_settings:
+  title: 'General settings'
+  route_name: drupal_toolkit_social_networks.admin_config_general_settings
+  parent: system.admin_config
+  description: 'General settings of the website.'
+
+drupal_toolkit_social_networks.social_networks:
+  title: 'Social networks'
+  route_name: drupal_toolkit_social_networks.social_networks
+  parent: drupal_toolkit_social_networks.admin_config_general_settings
+  description: 'Social networks used on the website.'

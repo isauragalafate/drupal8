@@ -1,0 +1,5 @@
+drupal_toolkit_social_networks.social_networks:
+  title: 'Social networks'
+  base_route_name: drupal_toolkit_social_networks.social_networks
+  names:
+    - drupal_toolkit_social_networks.social_networks

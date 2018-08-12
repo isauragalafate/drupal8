@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Contents ...olkit_entity_crud_links/drupal_toolkit_entity_crud_links.install.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function drupal_toolkit_social_networks_uninstall() {
+  \Drupal::service('config.factory')->getEditable('drupal_toolkit_social_networks.social_networks')->delete();
+}

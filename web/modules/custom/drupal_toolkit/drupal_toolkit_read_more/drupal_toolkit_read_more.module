@@ -1,0 +1,132 @@
+<?php
+
+/**
+ * @file
+ * Contains drupal_toolkit_read_more.module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\node\Entity\NodeType;
+use Drupal\media\Entity\Media;
+
+
+/**
+ * Implements hook_theme().
+ */
+function drupal_toolkit_read_more_theme() {
+  return [
+    'pseudo_field_link' => [
+      'variables' => [
+        'link' => '',
+      ],
+      'template' => 'pseudo-field-link',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_extra_field_info().
+ */
+function drupal_toolkit_read_more_entity_extra_field_info() {
+  $extra = [];
+
+  // Pseudo fields for Node entities.
+  foreach (NodeType::loadMultiple() as $bundle) {
+    $bundle_type = $bundle->Id();
+
+    // Add link to node.
+    $description = t('This is a pseudo field to render a link to the node 
+                          according with the current language.');
+    $extra['node'][$bundle_type]['display']['pseudo_field_link'] = [
+      'label' => t('Read more'),
+      'description' => $description,
+      'visible' => FALSE,
+    ];
+
+  }
+
+  // Pseudo fields for Media entities.
+  $moduleHandler = \Drupal::service('module_handler');
+  if ($moduleHandler->moduleExists('media')){
+    $bundles = Media::loadMultiple();
+
+    foreach ($bundles as $bundle) {
+      $bundle_type = $bundle->bundle();
+
+      // Add link to media.
+      $description = t('This is a pseudo field to render a link to the media 
+                          according with the current language.');
+      $extra['media'][$bundle_type]['display']['pseudo_field_link'] = [
+        'label' => t('Read more'),
+        'description' => $description,
+        'visible' => FALSE,
+      ];
+    }
+  }
+
+
+  return $extra;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function drupal_toolkit_read_more_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('pseudo_field_link')) {
+    $build['pseudo_field_link'] = [
+      '#theme' => 'pseudo_field_link',
+      '#link' => getLinkFromEntity($entity),
+    ];
+  }
+
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_view().
+ */
+function drupal_toolkit_read_more_media_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+  if ($display->getComponent('pseudo_field_link')) {
+    $build['pseudo_field_link'] = [
+      '#theme' => 'pseudo_field_link',
+      '#link' => getLinkFromEntity($entity),
+    ];
+  }
+}
+
+/**
+ * Return an associative array withe the image info.
+ *
+ * @param \Drupal\Core\Entity\EntityInterface $entity
+ *   The entity object.
+ *
+ * @return string
+ *   The alias url to the node according to the current language.
+ */
+function getLinkFromEntity(EntityInterface $entity) {
+  $link = [];
+
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+  $service = \Drupal::service('url_scope');
+  $entity_url_alias = $service->getEntityViewUrlByScope($entity);
+
+  if (!empty($entity_url_alias) && UrlHelper::isValid($entity_url_alias)) {
+    switch ($entity->bundle()) {
+      default:
+        $label = t('Read more');
+        break;
+    }
+
+    $link = [
+      'href' => $entity_url_alias,
+      'rel' => '',
+      'title' => $entity->label(),
+      'hreflang' => $langcode,
+      'label' => $label,
+    ];
+  }
+
+  return $link;
+}

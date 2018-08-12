@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Contains drupal_toolkit_configurable_fields.module.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function drupal_toolkit_configurable_fields_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  $configurable_fields = configurableFieldsInfo($entity_type->id());
+
+  // Make fields configurable on view modes.
+  foreach ($configurable_fields as $configurable_field => $options) {
+    if (!empty($fields[$configurable_field])) {
+      $fields[$configurable_field]
+        ->setDisplayConfigurable('view', TRUE)
+        ->setDisplayOptions('view', $options);
+    }
+  }
+}
+
+/**
+ * Return information about the base fields that can be managed.
+ *
+ * @param string $entity_type_id
+ *   Entity type ID to return fields for.
+ *
+ * @return array
+ *   Array keyed by field name with value equal
+ *   to the default display options.
+ */
+function configurableFieldsInfo($entity_type_id) {
+  $configurable_fields_options = [
+    'label' => 'hidden',
+    'type' => 'string',
+    'weight' => -5,
+  ];
+
+  $configurable_fields['node']['title'] = $configurable_fields_options;
+  $configurable_fields['user']['name'] = $configurable_fields_options;
+  $configurable_fields['taxonomy_term']['name'] = $configurable_fields_options;
+
+  return isset($configurable_fields[$entity_type_id]) ? $configurable_fields[$entity_type_id] : [];
+}

@@ -1,0 +1,5 @@
+name: Toolkit Disable language switcher
+type: module
+description: Disable no translated language item on language switcher block.
+core: 8.x
+package: Toolkit

@@ -1,0 +1,44 @@
+<?php
+
+/**
+ * @file
+ * Provides a 'Disable not translated' block.
+ */
+
+use Drupal\Core\Block\BlockPluginInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+
+/**
+ * Implements hook__block_view_alter().
+ */
+function drupal_toolkit_disable_not_translated_block_view_language_block_alter(array &$build, BlockPluginInterface $block) {
+  $build['#pre_render'][] = '_disable_switcher_link_language_not_translated';
+}
+
+/**
+ * Return the current content from the route.
+ *
+ * @param array $build
+ *   Block language render array.
+ *
+ * @return array
+ *   Block language render array modified.
+ */
+function _disable_switcher_link_language_not_translated(array $build) {
+  $params = \Drupal::routeMatch()->getParameters()->all();
+
+  foreach ($params as $param) {
+    if ($param instanceof ContentEntityInterface) {
+      $entity_translations = $param->getTranslationLanguages();
+      // If the content has not the translation in some language disable it.
+      foreach ($build['content']['#links'] as $key => $value) {
+        if (!array_key_exists($key, $entity_translations)) {
+          unset($build['content']['#links'][$key]['url']);
+          $build['content']['#links'][$key]['attributes']['class'][] = 'disable-language';
+        }
+      }
+    }
+  }
+
+  return $build;
+}

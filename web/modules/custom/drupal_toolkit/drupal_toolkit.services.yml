@@ -1,0 +1,4 @@
+services:
+  drupal_toolkit:
+    class: Drupal\drupal_toolkit\DrupalToolkit
+    arguments: []

@@ -1,0 +1,5 @@
+name: Toolkit Read more
+type: module
+description: Provide an entity read more link.
+core: 8.x
+package: Toolkit

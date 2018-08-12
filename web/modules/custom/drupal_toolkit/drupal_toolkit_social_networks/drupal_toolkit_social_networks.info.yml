@@ -1,0 +1,7 @@
+name: Toolkit Social Networks
+type: module
+description: Add custom form and block to manage social networks integration
+core: 8.x
+package: Toolkit
+dependencies:
+  - drupal_toolkit

@@ -1,0 +1,5 @@
+name: Toolkit
+type: module
+description: Provides a service with useful methods to work in an easier way with Drupal.
+core: 8.x
+package: Toolkit

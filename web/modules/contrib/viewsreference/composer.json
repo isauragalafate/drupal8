@@ -1,7 +1,7 @@
 {
   "name": "drupal/viewsreference",
   "type": "drupal-module",
-  "description": "Views Reference",
+  "description": "Views reference",
   "keywords": ["Drupal"],
   "license": "GPL-2.0+",
   "homepage": "http://drupal.org/project/viewsreference",

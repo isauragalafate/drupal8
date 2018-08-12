@@ -1,0 +1,4 @@
+drupal_toolkit_social_networks.social_networks_form_tab:
+  route_name: drupal_toolkit_social_networks.social_networks
+  title: Settings
+  base_route: drupal_toolkit_social_networks.social_networks

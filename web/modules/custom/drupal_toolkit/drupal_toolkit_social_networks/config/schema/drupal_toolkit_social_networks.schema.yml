@@ -1,0 +1,47 @@
+drupal_toolkit_social_networks.social_networks:
+  type: config_object
+  label: 'Social networks'
+  mapping:
+    social_networks:
+      type: mapping
+      label: 'Social networks'
+      mapping:
+        rss:
+          type: label
+          label: 'RSS'
+          translatable: true
+        twitter:
+          type: label
+          label: 'Twitter'
+          translatable: true
+        facebook:
+          type: label
+          label: 'Facebook'
+          translatable: true
+        instagram:
+          type: label
+          label: 'Instagram'
+        linkedin:
+          type: label
+          label: 'LinkedIn'
+          translatable: true
+        flickr:
+          type: label
+          label: 'Flickr'
+          translatable: true
+        youtube:
+          type: label
+          label: 'YouTube'
+          translatable: true
+        vimeo:
+          type: label
+          label: 'Vimeo'
+          translatable: true
+        dailymotion:
+          type: label
+          label: 'Dailymotion'
+          translatable: true
+        blog:
+          type: label
+          label: 'Blog'
+          translatable: true

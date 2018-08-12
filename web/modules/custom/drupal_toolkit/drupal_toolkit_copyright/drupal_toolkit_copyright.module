@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Provides a 'Copyright' block.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function drupal_toolkit_copyright($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.drupal_toolkit_copyright':
+      $output = '<h3>' . t('Toolkit - Copyright block') . '</h3>';
+
+      return $output;
+  }
+}
