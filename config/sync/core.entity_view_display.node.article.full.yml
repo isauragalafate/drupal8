@@ -6,6 +6,7 @@ dependencies:
     - core.entity_view_mode.node.full
     - field.field.node.article.body
     - field.field.node.article.comment
+    - field.field.node.article.field_category
     - field.field.node.article.field_component
     - field.field.node.article.field_contact
     - field.field.node.article.field_image
@@ -197,5 +198,6 @@ content:
     third_party_settings: {  }
 hidden:
   comment: true
+  field_category: true
   field_contact: true
   panelizer: true

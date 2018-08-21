@@ -1,0 +1,10 @@
+uuid: 056ce250-353f-4873-b6a9-47c33c8529b5
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: header.token
+label: Token
+targetEntityType: header
+cache: true

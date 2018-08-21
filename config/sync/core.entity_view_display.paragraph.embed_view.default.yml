@@ -3,7 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.paragraph.embed_view.field_view
+    - field.field.paragraph.embed_view.field_views
     - paragraphs.paragraphs_type.embed_view
   module:
     - viewsreference
@@ -12,7 +12,7 @@ targetEntityType: paragraph
 bundle: embed_view
 mode: default
 content:
-  field_view:
+  field_views:
     weight: 0
     label: above
     settings:

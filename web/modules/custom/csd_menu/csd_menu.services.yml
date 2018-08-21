@@ -1,0 +1,5 @@
+services:
+  modulename.route_subscriber:
+    class: Drupal\csd_menu\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber, priority: 100 }

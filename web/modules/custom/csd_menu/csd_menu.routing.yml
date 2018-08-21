@@ -1,0 +1,9 @@
+
+csd_menu.menu_controller_content:
+  path: '/taxonomy/term/{term}'
+  defaults:
+    _controller: '\Drupal\csd_menu\Controller\MenuController::content'
+    _title: 'Testing menu controller'
+  requirements:
+    _permission: 'access content'
+    taxonomy_term: \d+

@@ -39,7 +39,7 @@ function csd_menu_theme($existing, $type, $theme, $path) {
 }
 
 function csd_menu_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
-  if ($entity->bundle() == 'node') {
+  if ($entity->getEntityTypeId() == 'node') {
     $title = $entity->label();
     $id = $entity->id();
     if ($entity->hasField('field_category')) {

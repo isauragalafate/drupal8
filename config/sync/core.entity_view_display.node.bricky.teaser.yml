@@ -5,6 +5,8 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.bricky.field_body
+    - field.field.node.bricky.field_header
+    - field.field.node.bricky.field_headerbricks
     - node.type.bricky
   module:
     - bricks
@@ -26,4 +28,6 @@ content:
     third_party_settings: {  }
     region: content
 hidden:
+  field_header: true
+  field_headerbricks: true
   links: true

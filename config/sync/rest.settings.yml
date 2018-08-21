@@ -1,0 +1,32 @@
+bc_entity_resource_permissions: false
+_core:
+  default_config_hash: Jg3_yqsTIZ51KOKp3OV2KDVVrlx3N3OCEfniEse09KE
+resources:
+  migrate_example_advanced_position:
+    GET:
+      supported_formats:
+        - json
+        - xml
+      supported_auth:
+        - cookie
+  migrate_example_advanced_variety_multiple:
+    GET:
+      supported_formats:
+        - json
+        - xml
+      supported_auth:
+        - cookie
+  migrate_example_advanced_variety_list:
+    GET:
+      supported_formats:
+        - json
+        - xml
+      supported_auth:
+        - cookie
+  migrate_example_advanced_variety_items:
+    GET:
+      supported_formats:
+        - json
+        - xml
+      supported_auth:
+        - cookie

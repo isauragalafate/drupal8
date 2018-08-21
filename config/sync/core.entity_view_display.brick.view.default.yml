@@ -4,23 +4,11 @@ status: true
 dependencies:
   config:
     - eck.eck_type.brick.view
-    - field.field.brick.view.field_view
-  module:
-    - viewsreference
 id: brick.view.default
 targetEntityType: brick
 bundle: view
 mode: default
 content:
-  field_view:
-    weight: -4
-    label: above
-    settings:
-      plugin_types:
-        - block
-    third_party_settings: {  }
-    type: viewsreference_formatter
-    region: content
   title:
     label: hidden
     type: string

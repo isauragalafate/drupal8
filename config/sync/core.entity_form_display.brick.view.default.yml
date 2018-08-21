@@ -4,23 +4,11 @@ status: true
 dependencies:
   config:
     - eck.eck_type.brick.view
-    - field.field.brick.view.field_view
-  module:
-    - viewsreference
 id: brick.view.default
 targetEntityType: brick
 bundle: view
 mode: default
 content:
-  field_view:
-    weight: 3
-    settings:
-      match_operator: CONTAINS
-      size: '60'
-      placeholder: ''
-    third_party_settings: {  }
-    type: viewsreference_autocomplete
-    region: content
   title:
     type: string_textfield
     weight: -5

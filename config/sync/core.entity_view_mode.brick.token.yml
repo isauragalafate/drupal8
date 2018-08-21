@@ -1,0 +1,10 @@
+uuid: fbed41a6-54f0-4acd-a312-224d547415f4
+langcode: en
+status: true
+dependencies:
+  module:
+    - eck
+id: brick.token
+label: Token
+targetEntityType: brick
+cache: true

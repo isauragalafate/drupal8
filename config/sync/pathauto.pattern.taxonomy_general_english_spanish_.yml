@@ -1,0 +1,14 @@
+uuid: bce0369c-0fab-4a42-b430-939a44b0e62c
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+id: taxonomy_general_english_spanish_
+label: 'Taxonomy: General (English, Spanish)'
+type: 'canonical_entities:taxonomy_term'
+pattern: '[term:parents:join-path]/[term:name]'
+selection_criteria: {  }
+selection_logic: and
+weight: 0
+relationships: {  }
